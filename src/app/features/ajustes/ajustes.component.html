@@ -1,0 +1,46 @@
+<section class="view">
+  <div class="page-head">
+    <div>
+      <h1>Ajustes</h1>
+      <p class="sub">Configuración de tu negocio</p>
+    </div>
+  </div>
+
+  <div class="card settings-card">
+    <div class="grid-form">
+      <div class="field">
+        <label>Nombre comercial</label>
+        <input type="text" [value]="form().name" (input)="onFieldChange('name', $event)" />
+      </div>
+      <div class="field">
+        <label>CIF / NIF</label>
+        <input type="text" [value]="form().nit" (input)="onFieldChange('nit', $event)" />
+      </div>
+      <div class="field">
+        <label>Teléfono</label>
+        <input type="text" [value]="form().phone" (input)="onFieldChange('phone', $event)" />
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" [value]="form().email" (input)="onFieldChange('email', $event)" />
+      </div>
+      <div class="field" style="grid-column: 1 / -1;">
+        <label>Dirección</label>
+        <input type="text" [value]="form().addr" (input)="onFieldChange('addr', $event)" />
+      </div>
+      <div class="field">
+        <label>Tipo de IVA (%)</label>
+        <input type="number" min="0" max="100" [value]="form().rate" (input)="onFieldChange('rate', $event)" />
+      </div>
+      <div class="field">
+        <label>Serie de facturación</label>
+        <input type="text" [value]="form().prefix" (input)="onFieldChange('prefix', $event)" />
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" (click)="save()">
+        {{ saved() ? 'Guardado ✓' : 'Guardar cambios' }}
+      </button>
+    </div>
+  </div>
+</section>

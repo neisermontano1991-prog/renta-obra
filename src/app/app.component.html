@@ -1,0 +1,11 @@
+<div class="app" [class.has-sidebar]="showSidebar">
+  @if (showSidebar) {
+    <app-sidebar [currentView]="currentView" (viewChange)="navigateTo($event)"></app-sidebar>
+  }
+  <main class="main" [class.main-full]="!showSidebar">
+    <div class="container">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>
+<app-toast></app-toast>

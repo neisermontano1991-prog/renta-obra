@@ -1,0 +1,357 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #1a1a2e;
+  font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
+}
+
+/* ── Stage ── */
+.stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40px 20px;
+  gap: 20px;
+}
+
+.caption {
+  font-size: 13px;
+  color: #666;
+  letter-spacing: .04em;
+}
+.caption strong {
+  color: #aaa;
+}
+
+/* ═══════════════════════════════════════════════════
+   Android Device Frame
+   ═══════════════════════════════════════════════════ */
+.device {
+  position: relative;
+  width: 380px;
+  height: 800px;
+  background: linear-gradient(145deg, #2c2c2e, #1c1c1e);
+  border-radius: 40px;
+  padding: 14px;
+  box-shadow:
+    0 0 0 2px #444,
+    0 20px 80px rgba(0, 0, 0, .55),
+    inset 0 1px 0 rgba(255, 255, 255, .06);
+  flex-shrink: 0;
+}
+
+/* ── Side Buttons ── */
+.device-btn {
+  position: absolute;
+  background: linear-gradient(180deg, #444, #333);
+  border-radius: 3px;
+}
+.device-btn.power {
+  width: 4px;
+  height: 52px;
+  right: -3px;
+  top: 180px;
+}
+.device-btn.vol-up {
+  width: 4px;
+  height: 28px;
+  left: -3px;
+  top: 160px;
+}
+.device-btn.vol-down {
+  width: 4px;
+  height: 28px;
+  left: -3px;
+  top: 200px;
+}
+
+/* ── Screen ── */
+.screen {
+  width: 100%;
+  height: 100%;
+  background: #f5f5f5;
+  border-radius: 28px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* ═══════════════════════════════════════════════════
+   Status Bar
+   ═══════════════════════════════════════════════════ */
+.statusbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 24px 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #000;
+  flex-shrink: 0;
+  z-index: 5;
+}
+.sb-time {
+  font-weight: 600;
+  font-size: 13px;
+}
+.sb-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sb-date {
+  font-size: 11px;
+  color: #555;
+}
+.sb-icons {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.sb-icon {
+  width: 16px;
+  height: 12px;
+  color: #000;
+}
+
+/* ── Camera Punch Hole ── */
+.punch-hole {
+  position: absolute;
+  top: 34px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 12px;
+  background: #000;
+  border-radius: 50%;
+  z-index: 10;
+}
+
+/* ═══════════════════════════════════════════════════
+   Content Area
+   ═══════════════════════════════════════════════════ */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 80px;
+}
+
+/* ═══════════════════════════════════════════════════
+   App Bar (Material 3)
+   ═══════════════════════════════════════════════════ */
+.appbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 8px 10px 8px;
+  background: #f5f5f5;
+}
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: #1d1b20;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.icon-btn:active {
+  background: rgba(0, 0, 0, .08);
+}
+.appbar-title {
+  font-size: 22px;
+  font-weight: 400;
+  color: #1d1b20;
+  letter-spacing: 0;
+}
+
+/* ═══════════════════════════════════════════════════
+   Filter Chips (Material 3)
+   ═══════════════════════════════════════════════════ */
+.chips-row {
+  display: flex;
+  gap: 8px;
+  padding: 6px 16px 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.chips-row::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  flex-shrink: 0;
+  padding: 6px 16px;
+  border-radius: 8px;
+  border: 1px solid #79747e;
+  background: transparent;
+  color: #49454f;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: .02em;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.chip:active {
+  background: rgba(0, 0, 0, .06);
+}
+.chip.active {
+  background: #e8def8;
+  color: #4a4458;
+  border-color: #e8def8;
+}
+
+/* ═══════════════════════════════════════════════════
+   Invoice Cards (Material 3)
+   ═══════════════════════════════════════════════════ */
+.invoice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 16px;
+}
+
+.invoice-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .08), 0 1px 2px rgba(0, 0, 0, .06);
+}
+
+.inv-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.inv-num {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d1b20;
+  letter-spacing: .01em;
+}
+.inv-status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 100px;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+.inv-status[data-status="pagada"] {
+  background: #d4f5dc;
+  color: #1b6d32;
+}
+.inv-status[data-status="pendiente"] {
+  background: #fef3cd;
+  color: #856404;
+}
+.inv-status[data-status="vencida"] {
+  background: #fde0e0;
+  color: #b91c1c;
+}
+
+.inv-client {
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 10px;
+  line-height: 1.3;
+}
+
+.inv-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.inv-date {
+  font-size: 12px;
+  color: #888;
+}
+.inv-total {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1d1b20;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ═══════════════════════════════════════════════════
+   Bottom Navigation (Material 3)
+   ═══════════════════════════════════════════════════ */
+.bottom-nav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: #fffbfe;
+  border-top: 0.5px solid #e0e0e0;
+  padding: 8px 0 12px;
+  border-radius: 0 0 28px 28px;
+  z-index: 5;
+}
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: #49454f;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: color .15s;
+}
+.nav-item.active {
+  color: #6750a4;
+}
+.nav-item.active svg {
+  background: #e8def8;
+  border-radius: 16px;
+  padding: 3px 16px;
+}
+.nav-item span {
+  letter-spacing: .03em;
+}
+
+/* ═══════════════════════════════════════════════════
+   FAB (Material 3)
+   ═══════════════════════════════════════════════════ */
+.fab {
+  position: absolute;
+  bottom: 88px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: #e8def8;
+  color: #4a4458;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, .2), 0 1px 3px rgba(0, 0, 0, .12);
+  z-index: 6;
+  transition: box-shadow .2s, transform .15s;
+}
+.fab:active {
+  transform: scale(.95);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, .15);
+}
+
+/* ═══════════════════════════════════════════════════
+   Utility
+   ═══════════════════════════════════════════════════ */
+.num {
+  font-variant-numeric: tabular-nums;
+}

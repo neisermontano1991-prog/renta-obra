@@ -1,0 +1,158 @@
+<section class="view">
+  <div class="page-head">
+    <div>
+      <h1>{{ editMode() ? 'Editar factura ' + editInvoiceNum() : 'Nueva factura' }}</h1>
+      <p class="sub">{{ editMode() ? 'Modifica los datos de la factura' : 'Genera una factura de alquiler de herramientas' }}</p>
+    </div>
+  </div>
+
+  <div class="gen">
+    <div class="gen-form">
+      <div class="card">
+        <h4>Datos de la factura</h4>
+        <div class="grid-form" style="margin-top: var(--space-4);">
+          <div class="field">
+            <label>Número</label>
+            <input type="text" value="Se generará al guardar" disabled />
+          </div>
+          <div class="field">
+            <label>Fecha de emisión</label>
+            <input type="date" [value]="date()" (input)="date.set($any($event.target).value)" />
+          </div>
+          <div class="field">
+            <label>Vencimiento</label>
+            <input type="date" [value]="due()" (input)="due.set($any($event.target).value)" />
+          </div>
+          <div class="field">
+            <label>Forma de pago</label>
+            <select [value]="method()" (change)="method.set($any($event.target).value)">
+              <option *ngFor="let m of methods" [value]="m">{{ m }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h4>Cliente</h4>
+          <button class="btn btn-ghost btn-sm" (click)="toggleNewClient()">
+            {{ showNewClient() ? 'Cancelar' : '+ Nuevo cliente' }}
+          </button>
+        </div>
+        <div style="margin-top: var(--space-4);">
+          <div class="field" *ngIf="!showNewClient()">
+            <label>Seleccionar cliente</label>
+            <select (change)="onClientChange($event)">
+              <option [value]="''">— Selecciona un cliente —</option>
+              <option *ngFor="let c of clients()" [value]="c.id">{{ c.name }}</option>
+            </select>
+          </div>
+          <div *ngIf="showNewClient()" class="new-client-form">
+            <div class="grid-form">
+              <div class="field">
+                <label>Nombre</label>
+                <input type="text" [value]="newClient().name" (input)="updateNewClientField('name', $event)" />
+              </div>
+              <div class="field">
+                <label>NIF / CIF</label>
+                <input type="text" [value]="newClient().nit" (input)="updateNewClientField('nit', $event)" />
+              </div>
+              <div class="field">
+                <label>Teléfono</label>
+                <input type="text" [value]="newClient().phone" (input)="updateNewClientField('phone', $event)" />
+              </div>
+              <div class="field">
+                <label>Email</label>
+                <input type="email" [value]="newClient().email" (input)="updateNewClientField('email', $event)" />
+              </div>
+              <div class="field" style="grid-column: 1 / -1;">
+                <label>Dirección</label>
+                <input type="text" [value]="newClient().addr" (input)="updateNewClientField('addr', $event)" />
+              </div>
+            </div>
+            <button class="btn btn-primary" style="margin-top: var(--space-3);" (click)="saveNewClient()">Guardar cliente</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h4>Herramientas alquiladas</h4>
+        <div style="margin-top: var(--space-4);">
+          <div class="item-row" *ngFor="let line of lines(); let i = index">
+            <div class="field">
+              <select [value]="line.toolId ?? ''" (change)="onToolSelect($event, i)">
+                <option value="">Seleccionar herramienta…</option>
+                <option *ngFor="let t of toolOptions()" [value]="t.id">{{ t.name }}</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Días</label>
+              <input type="number" min="1" [value]="line.days" (input)="onDaysChange($event, i)" />
+            </div>
+            <div class="field">
+              <label>Precio / día</label>
+              <input type="text" [value]="line.priceDay | currencyFormat" disabled />
+            </div>
+            <div class="field">
+              <label>Subtotal</label>
+              <input type="text" [value]="(line.priceDay * line.days) | currencyFormat" disabled />
+            </div>
+            <button class="icon-btn danger" (click)="removeLine(i)">
+              <svg viewBox="0 0 24 24" width="16" height="16"><path d="M18 6L6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+          <button class="add-row-btn" (click)="addLine()">
+            + Añadir herramienta
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="totals-box">
+          <div class="line">
+            <span>Base imponible</span>
+            <span class="num">{{ base() | currencyFormat }}</span>
+          </div>
+          <div class="line">
+            <span style="display:flex; align-items:center; gap: var(--space-2);">
+              IVA
+              <input
+                type="number"
+                min="0"
+                max="100"
+                style="width: 60px; text-align: right;"
+                [value]="ivaRate()"
+                (input)="onIvaChange($event)"
+              />%
+            </span>
+            <span class="num">{{ iva() | currencyFormat }}</span>
+          </div>
+          <div class="line total">
+            <span>Total</span>
+            <span class="num">{{ total() | currencyFormat }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" (click)="saveInvoice()">Guardar factura</button>
+        <button class="btn btn-secondary" (click)="printInvoice()">
+          <svg viewBox="0 0 24 24" width="16" height="16"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Imprimir / PDF
+        </button>
+      </div>
+    </div>
+
+    <div class="gen-preview">
+      <app-invoice-doc
+        [business]="business()"
+        [client]="selectedClient()"
+        [items]="draftItems()"
+        [invoiceDate]="date()"
+        [invoiceDue]="due()"
+        [invoiceMethod]="method()"
+        [ivaRate]="ivaRate()"
+      />
+    </div>
+  </div>
+</section>

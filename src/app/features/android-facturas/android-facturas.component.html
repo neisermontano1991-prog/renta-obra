@@ -1,0 +1,82 @@
+<div class="stage">
+  <div class="caption"><strong>RentaObra</strong> · Facturas (Android)</div>
+  <div class="device">
+    <div class="device-btn power"></div>
+    <div class="device-btn vol-up"></div>
+    <div class="device-btn vol-down"></div>
+    <div class="screen">
+      <div class="statusbar">
+        <span class="sb-time">9:41</span>
+        <div class="sb-right">
+          <span class="sb-date">mié, 19 ago</span>
+          <div class="sb-icons">
+            <svg class="sb-icon" viewBox="0 0 18 12"><rect x="0" y="6" width="3" height="6" rx="1" fill="currentColor"/><rect x="4" y="4" width="3" height="8" rx="1" fill="currentColor"/><rect x="8" y="2" width="3" height="10" rx="1" fill="currentColor"/><rect x="12" y="0" width="3" height="12" rx="1" fill="currentColor"/></svg>
+            <svg class="sb-icon" viewBox="0 0 16 12"><path d="M8 2.4C5.6 2.4 3.4 3.4 1.8 5l1.4 1.4C4.6 5 6.2 4.2 8 4.2s3.4.8 4.8 2.2L14.2 5C12.6 3.4 10.4 2.4 8 2.4zM8 6c-1.6 0-3 .6-4 1.6L5.4 9C6.2 8.2 7 7.8 8 7.8s1.8.4 2.6 1.2L12 7.6C11 6.6 9.6 6 8 6zm0 3.6c-.8 0-1.4.6-1.4 1.4S7.2 12.4 8 12.4s1.4-.6 1.4-1.4S8.8 9.6 8 9.6z" fill="currentColor"/></svg>
+            <svg class="sb-icon" viewBox="0 0 27 13"><rect x="0" y="0.5" width="22" height="12" rx="3.5" stroke="currentColor" stroke-width="1" fill="none"/><rect x="1.5" y="2" width="18" height="9" rx="2" fill="currentColor"/><rect x="23.5" y="4" width="2" height="5" rx="1" fill="currentColor" opacity=".4"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="punch-hole"></div>
+
+      <main class="content">
+        <!-- App Bar -->
+        <div class="appbar">
+          <button class="icon-btn" (click)="goBack()">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <h1 class="appbar-title">Facturas</h1>
+        </div>
+
+        <!-- Filter Chips -->
+        <div class="chips-row">
+          <button class="chip" [class.active]="activeFilter() === 'todas'" (click)="setFilter('todas')">Todas</button>
+          <button class="chip" [class.active]="activeFilter() === 'pagada'" (click)="setFilter('pagada')">Pagadas</button>
+          <button class="chip" [class.active]="activeFilter() === 'pendiente'" (click)="setFilter('pendiente')">Pendientes</button>
+          <button class="chip" [class.active]="activeFilter() === 'vencida'" (click)="setFilter('vencida')">Vencidas</button>
+        </div>
+
+        <!-- Invoice Cards -->
+        <div class="invoice-list">
+          @for (inv of filteredInvoices(); track inv.id) {
+            <div class="invoice-card">
+              <div class="inv-top">
+                <span class="inv-num">{{ inv.num }}</span>
+                <span class="inv-status" [attr.data-status]="inv.status">{{ statusLabel(inv.status) }}</span>
+              </div>
+              <p class="inv-client">{{ clientName(inv.clientId ?? '') }}</p>
+              <div class="inv-bottom">
+                <span class="inv-date">{{ inv.date | dateFormat }}</span>
+                <span class="inv-total num">{{ invoiceTotal(inv) | currencyFormat }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </main>
+
+      <!-- Bottom Nav -->
+      <div class="bottom-nav">
+        <div class="nav-item">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Inicio</span>
+        </div>
+        <div class="nav-item active">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Facturas</span>
+        </div>
+        <div class="nav-item">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Clientes</span>
+        </div>
+        <div class="nav-item">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+          <span>Ajustes</span>
+        </div>
+      </div>
+
+      <!-- FAB -->
+      <button class="fab">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path d="M12 5v14m-7-7h14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,64 @@
+<section class="view">
+  <div class="page-head">
+    <div>
+      <h1>Clientes</h1>
+      <p class="sub">{{ clientCount() }} clientes registrados</p>
+    </div>
+    <button class="btn btn-primary" (click)="toggleForm()">
+      <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Añadir cliente
+    </button>
+  </div>
+
+  <div class="card" *ngIf="showForm()" style="margin-bottom: var(--space-4);">
+    <h4 style="margin-bottom: var(--space-4);">Nuevo cliente</h4>
+    <div class="grid-form">
+      <div class="field">
+        <label>Nombre</label>
+        <input type="text" placeholder="Nombre del cliente" [value]="newClient().name" (input)="updateField('name', $event)" />
+      </div>
+      <div class="field">
+        <label>NIF / CIF</label>
+        <input type="text" placeholder="B12345678" [value]="newClient().nit" (input)="updateField('nit', $event)" />
+      </div>
+      <div class="field">
+        <label>Teléfono</label>
+        <input type="text" placeholder="600 000 000" [value]="newClient().phone" (input)="updateField('phone', $event)" />
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" placeholder="correo@empresa.es" [value]="newClient().email" (input)="updateField('email', $event)" />
+      </div>
+      <div class="field" style="grid-column: 1 / -1;">
+        <label>Dirección</label>
+        <input type="text" placeholder="Calle, número, ciudad" [value]="newClient().addr" (input)="updateField('addr', $event)" />
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" (click)="saveClient()">Guardar cliente</button>
+      <button class="btn btn-secondary" (click)="toggleForm()">Cancelar</button>
+    </div>
+  </div>
+
+  <div class="client-list">
+    <div class="cli" *ngFor="let c of clientData()">
+      <div class="avatar">{{ initials(c.name) }}</div>
+      <div class="cli-main">
+        <span class="name">{{ c.name }}</span>
+        <span class="meta">{{ c.nit }} · {{ c.phone }} · {{ c.email }}</span>
+      </div>
+      <div class="cli-stats">
+        <span class="stat">
+          <strong>{{ c.invoiceCount }}</strong> facturas
+        </span>
+        <span class="stat" *ngIf="c.pendingCount > 0">
+          <strong class="warn">{{ c.pendingCount }}</strong> pendientes
+        </span>
+        <span class="stat total">{{ c.totalAmount | currencyFormat }}</span>
+      </div>
+    </div>
+    <div *ngIf="clientData().length === 0" class="empty-state">
+      No hay clientes registrados
+    </div>
+  </div>
+</section>

@@ -1,0 +1,72 @@
+<section class="view">
+  <div class="page-head">
+    <div>
+      <h1>Panel de control</h1>
+      <p class="sub">Resumen de alquileres y cobros de hoy · {{ today }}</p>
+    </div>
+    <a class="btn btn-primary" routerLink="/nueva-factura">
+      <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Nueva factura
+    </a>
+  </div>
+
+  <div class="grid-kpi">
+    <div class="kpi">
+      <span class="label">Ingresos del mes</span>
+      <span class="value">{{ ingresosDelMes() | currencyFormat }}</span>
+    </div>
+    <div class="kpi">
+      <span class="label">Pendiente de cobro</span>
+      <span class="value">{{ pendienteData().total | currencyFormat }}</span>
+      <span class="sub" *ngIf="pendienteData().count > 0">{{ pendienteData().count }} facturas</span>
+    </div>
+    <div class="kpi">
+      <span class="label">Facturas emitidas</span>
+      <span class="value">{{ facturasMes() }}</span>
+    </div>
+    <div class="kpi">
+      <span class="label">Herramientas en alquiler</span>
+      <span class="value">{{ herramientasAlquiler() }}</span>
+    </div>
+  </div>
+
+  <div class="grid-2col">
+    <div class="card chart-card">
+      <h4 style="margin-bottom: var(--space-4);">Cobro mensual</h4>
+      <div class="chart-bars">
+        <div class="bar-col" *ngFor="let m of chartMonths()">
+          <span class="bar-value">{{ m.amount | currencyFormat }}</span>
+          <div class="bar">
+            <div class="bar-fill" [style.height.%]="(m.amount / chartMax()) * 100"></div>
+          </div>
+          <span class="bar-label">{{ m.label }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h4 style="margin-bottom: var(--space-4);">Últimas facturas</h4>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>N.º</th>
+            <th>Cliente</th>
+            <th>Total</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let inv of recentInvoices()">
+            <td class="num mono">{{ inv.num }}</td>
+            <td>{{ inv.clientName }}</td>
+            <td class="num">{{ invoiceTotal(inv) | currencyFormat }}</td>
+            <td><app-badge [status]="inv.status" /></td>
+          </tr>
+          <tr *ngIf="recentInvoices().length === 0">
+            <td colspan="4" style="text-align:center; color: var(--meta);">Sin facturas</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

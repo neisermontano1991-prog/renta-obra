@@ -1,0 +1,14 @@
+.view {
+  max-width: var(--container-max);
+  margin: 0 auto;
+}
+
+.sub {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+  margin-top: var(--space-1);
+}
+
+.settings-card {
+  max-width: 680px;
+}

@@ -1,0 +1,13 @@
+:host { display: block; }
+.app.has-sidebar {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  min-height: 100vh;
+}
+.main { padding: 28px clamp(16px, 4vw, 48px) 72px; min-width: 0; }
+.main-full { padding: 0; }
+.container { max-width: var(--container-max); margin: 0 auto; }
+
+@media (max-width: 900px) {
+  .app.has-sidebar { grid-template-columns: 1fr; }
+}

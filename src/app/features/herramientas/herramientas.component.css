@@ -1,0 +1,46 @@
+.view {
+  max-width: var(--container-max);
+  margin: 0 auto;
+}
+
+.sub {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+  margin-top: var(--space-1);
+}
+
+.tool-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.tool-name {
+  font-weight: var(--fw-semibold);
+  color: var(--fg);
+}
+
+.tool-meta {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.tool-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: var(--space-12) var(--space-6);
+  color: var(--meta);
+}
+
+.herramientas-card {
+  padding: 0;
+  overflow: hidden;
+  overflow-x: auto;
+}

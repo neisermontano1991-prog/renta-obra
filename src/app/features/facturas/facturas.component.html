@@ -1,0 +1,72 @@
+<section class="view">
+  <div class="page-head">
+    <div>
+      <h1>Facturas</h1>
+      <p class="sub">{{ invoiceCount() }} facturas en total</p>
+    </div>
+  </div>
+
+  <div class="filters">
+    <div class="chips">
+      <button class="chip" [class.active]="activeFilter() === 'todas'" (click)="setFilter('todas')">Todas</button>
+      <button class="chip" [class.active]="activeFilter() === 'pagada'" (click)="setFilter('pagada')">Pagadas</button>
+      <button class="chip" [class.active]="activeFilter() === 'pendiente'" (click)="setFilter('pendiente')">Pendientes</button>
+      <button class="chip" [class.active]="activeFilter() === 'vencida'" (click)="setFilter('vencida')">Vencidas</button>
+    </div>
+    <input
+      class="search-input"
+      type="search"
+      placeholder="Buscar factura…"
+      [value]="searchQuery()"
+      (input)="onSearch($event)"
+    />
+  </div>
+
+  <div class="card table-card">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>N.º factura</th>
+          <th>Cliente</th>
+          <th>Fecha</th>
+          <th>Vencimiento</th>
+          <th>Base</th>
+          <th>Total</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let inv of filteredInvoices()"
+          class="row-link"
+          (click)="openInvoice(inv)"
+        >
+          <td class="num mono">{{ inv.num }}</td>
+          <td>{{ clientName(inv.clientId ?? '') }}</td>
+          <td>{{ inv.date | dateFormat }}</td>
+          <td>{{ inv.due | dateFormat }}</td>
+          <td class="num">{{ total(inv) | currencyFormat }}</td>
+          <td class="num">{{ total(inv) | currencyFormat }}</td>
+          <td (click)="$event.stopPropagation()"><app-badge [status]="inv.status" /></td>
+          <td (click)="$event.stopPropagation()">
+            <div style="display:flex; gap: var(--space-2); align-items:center;">
+              <button class="btn btn-sm btn-secondary" (click)="openInvoice(inv)">Editar</button>
+              <button
+                class="btn btn-sm"
+                [class.btn-primary]="inv.status !== 'pagada'"
+                [class.btn-secondary]="inv.status === 'pagada'"
+                (click)="toggleStatus(inv.id!)"
+              >
+                {{ inv.status === 'pagada' ? 'Reabrir' : 'Marcar pagada' }}
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="filteredInvoices().length === 0">
+          <td colspan="8" style="text-align:center; color: var(--meta); padding: var(--space-8);">No se encontraron facturas</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>

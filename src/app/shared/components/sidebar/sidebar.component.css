@@ -1,0 +1,11 @@
+.brand small {
+  display: block;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-regular);
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.nav-item svg {
+  flex-shrink: 0;
+}
