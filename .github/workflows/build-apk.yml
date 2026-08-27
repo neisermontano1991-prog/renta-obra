@@ -29,6 +29,9 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Install required Android SDK packages
+        run: sdkmanager "build-tools;36.1.0" "platforms;android-36"
+
       - name: Install Bubblewrap CLI
         run: npm install -g @bubblewrap/cli
 
