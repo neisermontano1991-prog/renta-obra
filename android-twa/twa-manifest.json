@@ -1,0 +1,24 @@
+{
+  "packageId": "co.rentaobra.cliente",
+  "host": "neisermontano1991-prog.github.io",
+  "name": "RentaObra",
+  "launcherName": "RentaObra",
+  "display": "standalone",
+  "orientation": "portrait",
+  "themeColor": "#4f46e5",
+  "backgroundColor": "#f8fafc",
+  "startUrl": "/renta-obra/panel",
+  "iconUrl": "https://neisermontano1991-prog.github.io/renta-obra/icons/icon-512x512.png",
+  "maskableIconUrl": "https://neisermontano1991-prog.github.io/renta-obra/icons/icon-512x512.png",
+  "monochromeIconUrl": "https://neisermontano1991-prog.github.io/renta-obra/icons/icon-512x512.png",
+  "appVersionCode": 1,
+  "appVersion": "1.0.0",
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "android"
+  },
+  "splashScreenFadeOutDuration": 300,
+  "enableSiteSettingsShortcut": true,
+  "webManifestUrl": "https://neisermontano1991-prog.github.io/renta-obra/manifest.webmanifest",
+  "fullScopeUrl": "https://neisermontano1991-prog.github.io/renta-obra/"
+}
