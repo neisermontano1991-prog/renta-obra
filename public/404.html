@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>RentaObra</title>
+  <base href="/renta-obra/">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+</head>
+<body>
+  <script>
+    const path = location.pathname.replace(/^\/renta-obra/, '') || '/panel';
+    const base = location.origin + '/renta-obra';
+    if (path !== '' && path !== '/') {
+      history.replaceState(null, '', base + path);
+    }
+    fetch(base + '/index.html')
+      .then(r => r.text())
+      .then(html => {
+        document.open();
+        document.write(html);
+        document.close();
+      });
+  </script>
+  <noscript>Please enable JavaScript to continue using this application.</noscript>
+</body>
+</html>

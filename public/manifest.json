@@ -6,8 +6,8 @@
   "background_color": "#f8fafc",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "start_url": "/panel",
-  "scope": "/",
+  "start_url": "./panel",
+  "scope": "./",
   "icons": [
     {
       "src": "icons/icon-72x72.png",
