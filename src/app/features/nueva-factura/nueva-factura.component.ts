@@ -6,6 +6,7 @@ import { DataService } from '../../core/services/data.service';
 import { CurrencyFormatPipe } from '../../core/pipes/format.pipe';
 import { InvoiceDocComponent } from '../../shared/components/invoice-doc/invoice-doc.component';
 import { InvoiceItem, InvoicePayment, Client } from '../../core/models';
+import { Tool } from '../../core/models';
 
 interface DraftLine {
   toolId: string | null;
@@ -73,7 +74,6 @@ export class NuevaFacturaComponent implements OnInit {
   method = signal('Transferencia');
   clientId = signal<string | null>(null);
   showNewClient = signal(false);
-  ivaRate = signal(19);
   extraCharge = signal(0);
   extraDescription = signal('');
   notes = signal('');
@@ -85,8 +85,6 @@ export class NuevaFacturaComponent implements OnInit {
   base = computed(() =>
     this.lines().reduce((s, l) => s + l.priceDay * l.days * l.quantity, 0)
   );
-
-  iva = computed(() => (this.base() * this.ivaRate()) / 100);
 
   total = computed(() => this.base() + this.extraCharge());
 
@@ -104,6 +102,12 @@ export class NuevaFacturaComponent implements OnInit {
   methods = ['Transferencia', 'Efectivo', 'Tarjeta', 'Crédito a 30 días', 'Cheque'];
 
   toolOptions = computed(() => this.tools());
+
+  isLineTool(line: DraftLine, tool: Tool): boolean {
+    if (!line.toolId && !line.name) return false;
+    if (line.toolId) return line.toolId === tool.id;
+    return line.name === tool.name;
+  }
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
@@ -241,10 +245,6 @@ export class NuevaFacturaComponent implements OnInit {
 
   printInvoice(): void {
     window.print();
-  }
-
-  onIvaChange(event: Event): void {
-    this.ivaRate.set(Number((event.target as HTMLInputElement).value) || 0);
   }
 
   onExtraChargeChange(event: Event): void {

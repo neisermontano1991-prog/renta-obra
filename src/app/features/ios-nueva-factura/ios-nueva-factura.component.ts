@@ -26,17 +26,20 @@ export class IosNuevaFacturaComponent {
   tools = this.data.tools$;
 
   clientId = signal<string | null>(null);
-  ivaRate = signal(19);
   lines = signal<DraftLine[]>([]);
+  extraCharge = signal(0);
+  extraDescription = signal('');
   saved = signal(false);
 
   base = computed(() =>
     this.lines().reduce((s, l) => s + l.priceDay * l.days, 0)
   );
 
-  iva = computed(() => (this.base() * this.ivaRate()) / 100);
+  total = computed(() => this.base() + this.extraCharge());
 
-  total = computed(() => this.base() + this.iva());
+  onExtraChargeChange(event: Event): void {
+    this.extraCharge.set(Number((event.target as HTMLInputElement).value) || 0);
+  }
 
   onClientChange(event: Event): void {
     const val = (event.target as HTMLSelectElement).value;
@@ -93,6 +96,8 @@ export class IosNuevaFacturaComponent {
       method: 'Transferencia',
       status: 'pendiente',
       items,
+      extraCharge: this.extraCharge(),
+      extraDescription: this.extraDescription(),
     });
     this.saved.set(true);
     setTimeout(() => this.saved.set(false), 2200);

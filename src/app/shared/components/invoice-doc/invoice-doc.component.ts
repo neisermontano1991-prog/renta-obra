@@ -87,15 +87,9 @@ import { Business, Client, InvoiceItem, InvoicePayment } from '../../../core/mod
           <span class="val">{{ base() | currencyFormat }}</span>
         </div>
         <div class="row">
-          <span class="lbl">IVA ({{ ivaRate() }}%)</span>
-          <span class="val">{{ iva() | currencyFormat }}</span>
+          <span class="lbl">{{ extraDescription() || 'Valor adicional' }}</span>
+          <span class="val">{{ extraCharge() | currencyFormat }}</span>
         </div>
-        @if (extraCharge() > 0) {
-          <div class="row">
-            <span class="lbl">{{ extraDescription() || 'Valor adicional' }}</span>
-            <span class="val">{{ extraCharge() | currencyFormat }}</span>
-          </div>
-        }
         <div class="row grand">
           <span class="lbl">Total</span>
           <span class="val">{{ total() | currencyFormat }}</span>
@@ -154,7 +148,6 @@ export class InvoiceDocComponent {
   invoiceDue = input('');
   invoiceMethod = input('');
   invoiceNotes = input('');
-  ivaRate = input(19);
   extraCharge = input(0);
   extraDescription = input('');
   invoicePaymentAccount = input('');
@@ -163,8 +156,6 @@ export class InvoiceDocComponent {
   readonly base = computed(() =>
     this.items().reduce((sum, i) => sum + i.priceDay * i.days * (i.quantity || 1), 0)
   );
-
-  readonly iva = computed(() => (this.base() * this.ivaRate()) / 100);
 
   readonly total = computed(() => this.base() + this.extraCharge());
 

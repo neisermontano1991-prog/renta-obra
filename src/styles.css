@@ -611,6 +611,24 @@ button { cursor: pointer; }
   border-top: 2px solid var(--fg);
   padding-top: var(--space-2);
 }
+.totals-box .extra-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+}
+.totals-box .extra-row input {
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  background: var(--bg);
+  color: var(--fg);
+}
+.totals-box .extra-row input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
 
 .rate-line {
   font-size: var(--fs-sm);

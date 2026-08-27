@@ -80,9 +80,9 @@
         <div style="margin-top: var(--space-4);">
           <div class="item-row" *ngFor="let line of lines(); let i = index">
             <div class="field">
-              <select [value]="line.toolId ?? ''" (change)="onToolSelect($any($event.target).value, i)">
+              <select (change)="onToolSelect($any($event.target).value, i)">
                 <option value="">Seleccionar herramienta…</option>
-                <option *ngFor="let t of toolOptions()" [value]="t.id">{{ t.name }}</option>
+                <option *ngFor="let t of toolOptions()" [value]="t.id" [selected]="isLineTool(line, t)">{{ t.name }}</option>
               </select>
             </div>
             <div class="field">
@@ -132,30 +132,25 @@
             <span>Base imponible</span>
             <span class="num">{{ base() | currencyFormat }}</span>
           </div>
-          <div class="line">
-            <span>IVA ({{ ivaRate() }}%)</span>
-            <span class="num">{{ iva() | currencyFormat }}</span>
-          </div>
-          <div class="line">
-            <span style="display:flex; align-items:center; gap: var(--space-2);">
-              Valor adicional
+          <div class="line" style="flex-direction: column; align-items: stretch; gap: var(--space-2); padding: var(--space-3) 0;">
+            <div style="font-weight: var(--fw-medium); font-size: var(--fs-sm);">Valor adicional (opcional)</div>
+            <div class="extra-row">
               <input
                 type="text"
-                placeholder="Transporte, etc."
+                placeholder="Concepto (ej: transporte, generador)"
                 [value]="extraDescription()"
                 (input)="extraDescription.set($any($event.target).value)"
-                style="width: 140px; font-size: var(--fs-sm);"
+                style="flex:1; min-width:0;"
               />
-            </span>
-            <span style="display:flex; align-items:center; gap: var(--space-2);">
               <input
                 type="number"
                 min="0"
-                style="width: 100px; text-align: right;"
+                placeholder="$ 0"
                 [value]="extraCharge()"
                 (input)="onExtraChargeChange($event)"
+                style="width: 130px; text-align: right;"
               />
-            </span>
+            </div>
           </div>
           <div class="line total">
             <span>Total</span>
@@ -182,7 +177,6 @@
         [invoiceDue]="due()"
         [invoiceMethod]="method()"
         [invoiceNotes]="notes()"
-        [ivaRate]="ivaRate()"
         [extraCharge]="extraCharge()"
         [extraDescription]="extraDescription()"
         [invoicePaymentAccount]="business().paymentAccount"

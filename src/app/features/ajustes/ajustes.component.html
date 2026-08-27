@@ -33,10 +33,6 @@
         <input type="text" placeholder="Nombre que aparece en facturas" [value]="form().adminName" (input)="onFieldChange('adminName', $event)" />
       </div>
       <div class="field">
-        <label>Tipo de IVA (%)</label>
-        <input type="number" min="0" max="100" [value]="form().rate" (input)="onFieldChange('rate', $event)" />
-      </div>
-      <div class="field">
         <label>Serie de facturación</label>
         <input type="text" [value]="form().prefix" (input)="onFieldChange('prefix', $event)" />
       </div>
