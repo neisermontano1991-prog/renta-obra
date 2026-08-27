@@ -78,6 +78,21 @@
   letter-spacing: 0.05em;
 }
 
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: var(--space-2);
+}
+
+.btn-link:hover {
+  opacity: 0.85;
+}
+
 .login-hint {
   text-align: center;
   color: var(--meta);

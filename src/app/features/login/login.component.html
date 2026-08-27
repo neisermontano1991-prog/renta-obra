@@ -6,7 +6,7 @@
         <polyline points="9 22 9 12 15 12 15 22"/>
       </svg>
       <h1>RentaObra</h1>
-      <p>Inicia sesión para acceder</p>
+      <p>{{ mode() === 'login' ? 'Inicia sesión para acceder' : 'Crea tu cuenta' }}</p>
     </div>
 
     <div class="login-form">
@@ -19,10 +19,10 @@
       />
       <input
         type="password"
-        placeholder="Contraseña"
+        placeholder="Contraseña (mínimo 6 caracteres)"
         [value]="password()"
         (input)="onPassword($event)"
-        autocomplete="current-password"
+        [attr.autocomplete]="mode() === 'login' ? 'current-password' : 'new-password'"
       />
 
       @if (error()) {
@@ -30,18 +30,20 @@
       }
 
       <button class="btn btn-primary btn-block" [disabled]="loading()" (click)="submit()">
-        {{ loading() ? 'Ingresando…' : 'Ingresar' }}
+        {{ loading() ? 'Procesando…' : (mode() === 'login' ? 'Ingresar' : 'Crear cuenta') }}
       </button>
 
       <div class="login-divider">o</div>
 
+      <button class="btn btn-link btn-block" (click)="toggleMode()" [disabled]="loading()">
+        {{ mode() === 'login'
+          ? '¿No tienes cuenta? Regístrate aquí'
+          : 'Ya tengo cuenta, ingresar' }}
+      </button>
+
       <button class="btn btn-secondary btn-block" (click)="enterDemo()">
         Ver en modo demostración
       </button>
-
-      <p class="login-hint">
-        Si tu correo no existe, se creará tu cuenta automáticamente al ingresar.
-      </p>
     </div>
   </div>
 </section>

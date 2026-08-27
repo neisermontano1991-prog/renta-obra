@@ -133,12 +133,7 @@ export class DataService {
     try {
       const { data, error } = await this.supabase.auth.signInWithPassword({ email, password });
       if (error || !data.user) {
-        const signUp = await this.supabase.auth.signUp({ email, password });
-        if (signUp.error || !signUp.data.user) return { ok: false, error: signUp.error?.message || error?.message };
-        const u: SessionUser = { id: signUp.data.user.id, email, name: email.split('@')[0] };
-        this.user.set(u);
-        localStorage.setItem(SESSION_KEY, JSON.stringify(u));
-        return { ok: true };
+        return { ok: false, error: this.translateAuthError(error?.message || 'Credenciales inválidas') };
       }
       const u: SessionUser = { id: data.user.id, email, name: email.split('@')[0] };
       this.user.set(u);
@@ -147,6 +142,31 @@ export class DataService {
     } catch (err: any) {
       return { ok: false, error: err?.message || 'Error de conexión' };
     }
+  }
+
+  async register(email: string, password: string): Promise<{ ok: boolean; error?: string }> {
+    try {
+      const { data, error } = await this.supabase.auth.signUp({ email, password });
+      if (error) return { ok: false, error: this.translateAuthError(error.message) };
+      if (!data.user) return { ok: false, error: 'No se pudo crear la cuenta' };
+      if (data.session) {
+        const u: SessionUser = { id: data.user.id, email, name: email.split('@')[0] };
+        this.user.set(u);
+        localStorage.setItem(SESSION_KEY, JSON.stringify(u));
+      }
+      return { ok: true, error: undefined };
+    } catch (err: any) {
+      return { ok: false, error: err?.message || 'Error de conexión' };
+    }
+  }
+
+  private translateAuthError(msg: string): string {
+    const m = (msg || '').toLowerCase();
+    if (m.includes('rate limit')) return 'Demasiados intentos. Espera unos minutos y vuelve a intentar.';
+    if (m.includes('invalid login credentials')) return 'Email o contraseña incorrectos.';
+    if (m.includes('user already registered')) return 'Ese correo ya tiene cuenta. Ingresa con tu contraseña.';
+    if (m.includes('email not confirmed')) return 'Confirma tu correo con el enlace que te enviamos.';
+    return msg;
   }
 
   logout(): void {
