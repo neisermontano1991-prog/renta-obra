@@ -30,41 +30,69 @@
           <th>Cliente</th>
           <th>Fecha</th>
           <th>Vencimiento</th>
-          <th>Base</th>
           <th>Total</th>
           <th>Estado</th>
           <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
-        <tr
-          *ngFor="let inv of filteredInvoices()"
-          class="row-link"
-          (click)="openInvoice(inv)"
-        >
-          <td class="num mono">{{ inv.num }}</td>
-          <td>{{ clientName(inv.clientId ?? '') }}</td>
-          <td>{{ inv.date | dateFormat }}</td>
-          <td>{{ inv.due | dateFormat }}</td>
-          <td class="num">{{ total(inv) | currencyFormat }}</td>
-          <td class="num">{{ total(inv) | currencyFormat }}</td>
-          <td (click)="$event.stopPropagation()"><app-badge [status]="inv.status" /></td>
-          <td (click)="$event.stopPropagation()">
-            <div style="display:flex; gap: var(--space-2); align-items:center;">
-              <button class="btn btn-sm btn-secondary" (click)="openInvoice(inv)">Editar</button>
-              <button
-                class="btn btn-sm"
-                [class.btn-primary]="inv.status !== 'pagada'"
-                [class.btn-secondary]="inv.status === 'pagada'"
-                (click)="toggleStatus(inv.id!)"
-              >
-                {{ inv.status === 'pagada' ? 'Reabrir' : 'Marcar pagada' }}
-              </button>
-            </div>
-          </td>
-        </tr>
+        <ng-container *ngFor="let inv of filteredInvoices()">
+          <tr class="row-link">
+            <td class="num mono">{{ inv.num }}</td>
+            <td>{{ clientName(inv.clientId ?? '') }}</td>
+            <td>{{ inv.date | dateFormat }}</td>
+            <td>{{ inv.due | dateFormat }}</td>
+            <td class="num">{{ total(inv) | currencyFormat }}</td>
+            <td><app-badge [status]="inv.status" /></td>
+            <td>
+              <div style="display:flex; gap: var(--space-2); align-items:center; flex-wrap: wrap;">
+                <button class="btn btn-sm btn-secondary" (click)="openInvoice(inv)">Editar</button>
+                <button class="btn btn-sm btn-ghost" (click)="toggleExpanded(inv.id!)">
+                  {{ expandedInvoice() === inv.id ? 'Ocultar' : 'Detalle' }}
+                </button>
+                <button
+                  class="btn btn-sm"
+                  [class.btn-primary]="inv.status !== 'pagada'"
+                  [class.btn-secondary]="inv.status === 'pagada'"
+                  (click)="toggleStatus(inv.id!)"
+                >
+                  {{ inv.status === 'pagada' ? 'Reabrir' : 'Marcar pagada' }}
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="expandedInvoice() === inv.id" class="detail-row">
+            <td colspan="7" style="padding: 0;">
+              <div class="invoice-detail">
+                <div class="detail-header">Herramientas en esta factura</div>
+                <div class="detail-items">
+                  <div class="detail-item" *ngFor="let item of inv.items; let idx = index">
+                    <div class="detail-item-info">
+                      <span class="detail-item-name">{{ item.name }}</span>
+                      <span class="detail-item-meta">{{ item.priceDay | currencyFormat }}/día × {{ item.days }} días × {{ item.quantity || 1 }} cant. = {{ item.priceDay * item.days * (item.quantity || 1) | currencyFormat }}</span>
+                    </div>
+                    <button
+                      class="btn btn-sm"
+                      [class.btn-primary]="item.delivered"
+                      [class.btn-secondary]="!item.delivered"
+                      (click)="toggleItemDelivered(inv.id!, idx)"
+                    >
+                      {{ item.delivered ? '✓ Entregada' : 'Marcar entregada' }}
+                    </button>
+                  </div>
+                </div>
+                <div *ngIf="inv.notes" class="detail-notes">
+                  <strong>Notas:</strong> {{ inv.notes }}
+                </div>
+                <div *ngIf="inv.extraCharge" class="detail-notes" style="margin-top: var(--space-2);">
+                  <strong>{{ inv.extraDescription || 'Valor adicional' }}:</strong> {{ inv.extraCharge | currencyFormat }}
+                </div>
+              </div>
+            </td>
+          </tr>
+        </ng-container>
         <tr *ngIf="filteredInvoices().length === 0">
-          <td colspan="8" style="text-align:center; color: var(--meta); padding: var(--space-8);">No se encontraron facturas</td>
+          <td colspan="7" style="text-align:center; color: var(--meta); padding: var(--space-8);">No se encontraron facturas</td>
         </tr>
       </tbody>
     </table>

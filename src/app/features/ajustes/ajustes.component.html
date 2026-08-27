@@ -29,12 +29,30 @@
         <input type="text" [value]="form().addr" (input)="onFieldChange('addr', $event)" />
       </div>
       <div class="field">
+        <label>Nombre del administrador</label>
+        <input type="text" placeholder="Nombre que aparece en facturas" [value]="form().adminName" (input)="onFieldChange('adminName', $event)" />
+      </div>
+      <div class="field">
         <label>Tipo de IVA (%)</label>
         <input type="number" min="0" max="100" [value]="form().rate" (input)="onFieldChange('rate', $event)" />
       </div>
       <div class="field">
         <label>Serie de facturación</label>
         <input type="text" [value]="form().prefix" (input)="onFieldChange('prefix', $event)" />
+      </div>
+      <div class="field" style="grid-column: 1 / -1;">
+        <label>Cuenta de pago / Método de pago</label>
+        <textarea rows="2" placeholder="Ej: Bancolombia Ahorros 1234567890 / Nequi 3001234567 / Efectivo" [value]="form().paymentAccount" (input)="onFieldChange('paymentAccount', $event)"></textarea>
+      </div>
+      <div class="field" style="grid-column: 1 / -1;">
+        <label>Logo de la empresa</label>
+        @if (form().logoUrl) {
+          <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-2);">
+            <img [src]="form().logoUrl" alt="Logo" style="height: 60px; max-width: 200px; object-fit: contain; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px; background: var(--surface);" />
+            <button class="btn btn-sm btn-secondary" style="color: var(--danger);" (click)="removeLogo()">Quitar logo</button>
+          </div>
+        }
+        <input type="file" accept="image/*" (change)="onLogoUpload($event)" />
       </div>
     </div>
     <div class="form-actions">

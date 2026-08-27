@@ -55,6 +55,9 @@
           <strong class="warn">{{ c.pendingCount }}</strong> pendientes
         </span>
         <span class="stat total">{{ c.totalAmount | currencyFormat }}</span>
+        <button class="icon-btn danger" (click)="removeClient(c.id!)" title="Eliminar cliente" style="margin-left: var(--space-2);">
+          <svg viewBox="0 0 24 24" width="16" height="16"><path d="M18 6L6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
       </div>
     </div>
     <div *ngIf="clientData().length === 0" class="empty-state">

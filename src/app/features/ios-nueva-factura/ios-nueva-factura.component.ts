@@ -26,7 +26,7 @@ export class IosNuevaFacturaComponent {
   tools = this.data.tools$;
 
   clientId = signal<string | null>(null);
-  ivaRate = signal(21);
+  ivaRate = signal(19);
   lines = signal<DraftLine[]>([]);
   saved = signal(false);
 

@@ -66,3 +66,23 @@
   color: var(--meta);
   margin-top: 0;
 }
+
+.bar-col:hover .bar-fill {
+  background: var(--accent-hover, var(--accent));
+  opacity: 0.85;
+}
+
+.bar-active .bar-fill {
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(79, 70, 229, 0.4);
+}
+
+.bar-active .bar-label {
+  color: var(--accent);
+  font-weight: var(--fw-semibold);
+}
+
+.bar-active .bar-value {
+  color: var(--accent);
+  font-weight: var(--fw-semibold);
+}

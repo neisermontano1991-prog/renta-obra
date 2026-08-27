@@ -750,6 +750,44 @@ button { cursor: pointer; }
   color: var(--muted);
   text-align: center;
 }
+.doc-signature {
+  margin-top: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.doc-sig-line {
+  width: 200px;
+  border-bottom: 1px solid var(--fg-2);
+  margin-bottom: 4px;
+}
+.doc-sig-label {
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-sm);
+}
+.doc-sig-sub {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+.doc-notes {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  background: var(--fg-soft);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  color: var(--fg-2);
+  white-space: pre-wrap;
+}
+.doc-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.doc-brand small {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
 
 /* ═══════════════════════════════════════════
    Client List
@@ -871,6 +909,8 @@ button { cursor: pointer; }
   body {
     background: #fff;
     color: #000;
+    margin: 0;
+    padding: 0;
   }
   .sidebar,
   .nav,
@@ -878,7 +918,12 @@ button { cursor: pointer; }
   .btn,
   .form-actions,
   .toast,
-  .icon-btn {
+  .icon-btn,
+  .page-head,
+  .filters,
+  .gen-form,
+  .add-row-btn,
+  .item-row {
     display: none !important;
   }
   .app {
@@ -886,6 +931,20 @@ button { cursor: pointer; }
   }
   .main {
     padding: 0;
+    overflow: visible;
+  }
+  .view {
+    max-width: 100%;
+    margin: 0;
+  }
+  .gen {
+    display: block !important;
+    grid-template-columns: 1fr !important;
+  }
+  .gen-preview {
+    display: block !important;
+    width: 100% !important;
+    position: static !important;
   }
   .invoice-doc {
     border: none;

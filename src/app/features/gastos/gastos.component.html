@@ -1,0 +1,68 @@
+<section class="view">
+  <div class="page-head">
+    <div>
+      <h1>Gastos operativos</h1>
+      <p class="sub">Total: {{ totalGastado() | currencyFormat }}</p>
+    </div>
+    <button class="btn btn-primary" (click)="toggleForm()">
+      <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Agregar gasto
+    </button>
+  </div>
+
+  <div class="card" *ngIf="showForm()" style="margin-bottom: var(--space-4);">
+    <h4 style="margin-bottom: var(--space-4);">Nuevo gasto</h4>
+    <div class="grid-form">
+      <div class="field">
+        <label>Fecha</label>
+        <input type="date" [value]="form().date" (input)="onFieldChange('date', $event)" />
+      </div>
+      <div class="field">
+        <label>Categoría</label>
+        <select [value]="form().category" (change)="onCategoryChange($event)">
+          <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+        </select>
+      </div>
+      <div class="field" style="grid-column: 1 / -1;">
+        <label>Descripción</label>
+        <input type="text" placeholder="Ej. Gasolina para llevar taladros al sitio" [value]="form().description" (input)="onFieldChange('description', $event)" />
+      </div>
+      <div class="field">
+        <label>Monto ($)</label>
+        <input type="number" min="0" step="1000" [value]="form().amount" (input)="onFieldChange('amount', $event)" />
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" (click)="saveExpense()">Guardar gasto</button>
+      <button class="btn btn-secondary" (click)="toggleForm()">Cancelar</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <table class="data-table" *ngIf="expenses().length > 0">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Categoría</th>
+          <th>Descripción</th>
+          <th class="right">Monto</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let e of expenses()">
+          <td>{{ e.date }}</td>
+          <td><span class="pill">{{ e.category }}</span></td>
+          <td>{{ e.description }}</td>
+          <td class="right" style="font-weight: var(--fw-semibold);">{{ e.amount | currencyFormat }}</td>
+          <td class="right">
+            <button class="btn btn-sm btn-secondary" style="color: var(--danger);" (click)="removeExpense(e.id ?? '')">Quitar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div *ngIf="expenses().length === 0" class="empty-state">
+      No hay gastos registrados
+    </div>
+  </div>
+</section>

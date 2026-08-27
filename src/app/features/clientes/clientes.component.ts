@@ -70,4 +70,10 @@ export class ClientesComponent {
     this.newClient.set({ name: '', nit: '', phone: '', email: '', addr: '' });
     this.showForm.set(false);
   }
+
+  async removeClient(id: string): Promise<void> {
+    if (confirm('¿Eliminar este cliente?')) {
+      await this.data.removeClient(id);
+    }
+  }
 }

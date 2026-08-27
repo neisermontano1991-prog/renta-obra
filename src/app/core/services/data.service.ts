@@ -1,6 +1,6 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { Business, Client, Tool, Invoice, InvoiceItem } from '../models';
+import { Business, Client, Tool, Invoice, InvoiceItem, Expense } from '../models';
 import { environment } from '../../../environments/environment';
 
 const STORAGE_KEY = 'rentaobra-state-v1';
@@ -11,8 +11,11 @@ const DEFAULT_BUSINESS: Business = {
   phone: '+34 600 000 000',
   addr: 'C/ Industria 42, 28037 Madrid',
   email: 'hola@rentaobra.es',
-  rate: 21,
+  rate: 19,
   prefix: 'FAC',
+  logoUrl: '',
+  adminName: '',
+  paymentAccount: '',
 };
 
 const DEFAULT_CLIENTS: Client[] = [
@@ -51,15 +54,20 @@ export class DataService {
   private clients = signal<Client[]>(DEFAULT_CLIENTS);
   private tools = signal<Tool[]>(DEFAULT_TOOLS);
   private invoices = signal<Invoice[]>(DEFAULT_INVOICES);
+  private expenses = signal<Expense[]>([]);
   private seq = signal<number>(23);
 
   readonly business$ = this.business.asReadonly();
   readonly clients$ = this.clients.asReadonly();
   readonly tools$ = this.tools.asReadonly();
   readonly invoices$ = this.invoices.asReadonly();
+  readonly expenses$ = this.expenses.asReadonly();
   readonly isConnected = this.connected.asReadonly();
 
   readonly invoicesCount = computed(() => this.invoices().length);
+  readonly totalGastado = computed(() =>
+    this.expenses().reduce((sum, e) => sum + e.amount, 0)
+  );
   readonly totalFacturado = computed(() =>
     this.invoices().reduce((sum, inv) => {
       if (inv.status === 'pagada') {
@@ -104,8 +112,11 @@ export class DataService {
         phone: bizRes.data.phone || '',
         addr: bizRes.data.address || '',
         email: bizRes.data.email || '',
-        rate: 21,
-        prefix: 'FAC',
+        rate: bizRes.data.iva_rate || 19,
+        prefix: bizRes.data.prefix || 'FAC',
+        logoUrl: bizRes.data.logo_url || '',
+        adminName: bizRes.data.admin_name || '',
+        paymentAccount: bizRes.data.payment_account || '',
       });
     }
 
@@ -145,11 +156,16 @@ export class DataService {
           due: inv.due_date || '',
           method: inv.notes || '',
           status: inv.status,
+          notes: inv.invoice_notes || '',
+          extraCharge: inv.extra_charge || 0,
+          extraDescription: inv.extra_description || '',
           items: (itemsRes.data || []).map(i => ({
-            toolId: i.tool_id,
+            toolId: i.tool_id || null,
             name: i.tool_name,
             priceDay: i.price_day,
             days: i.days,
+            quantity: i.quantity || 1,
+            delivered: i.delivered || false,
           })),
         });
       }
@@ -158,6 +174,18 @@ export class DataService {
 
     if (seqRes.data) {
       this.seq.set(seqRes.data.seq + 1);
+    }
+
+    const expRes = await this.supabase.from('expenses').select('*').order('date', { ascending: false });
+    if (expRes.data) {
+      this.expenses.set(expRes.data.map(e => ({
+        id: e.id,
+        date: e.date,
+        description: e.description,
+        amount: e.amount,
+        category: e.category,
+        invoiceId: e.invoice_id || undefined,
+      })));
     }
   }
 
@@ -261,9 +289,45 @@ export class DataService {
     this.saveToLocal();
   }
 
+  async removeClient(id: string): Promise<void> {
+    if (this.connected()) {
+      await this.supabase.from('clients').delete().eq('id', id);
+    }
+    this.clients.update(list => list.filter(c => c.id !== id));
+    this.saveToLocal();
+  }
+
+  async addExpense(e: Omit<Expense, 'id'>): Promise<Expense> {
+    if (this.connected()) {
+      const { data, error } = await this.supabase
+        .from('expenses')
+        .insert({ date: e.date, description: e.description, amount: e.amount, category: e.category, invoice_id: e.invoiceId || null, business_id: this.getBusinessId() || null })
+        .select()
+        .single();
+      if (data && !error) {
+        const newExpense: Expense = { ...e, id: data.id };
+        this.expenses.update(list => [newExpense, ...list]);
+        return newExpense;
+      }
+      console.error('[RentaObra] Error addExpense:', error);
+    }
+    const newExpense: Expense = { ...e, id: crypto.randomUUID() };
+    this.expenses.update(list => [newExpense, ...list]);
+    this.saveToLocal();
+    return newExpense;
+  }
+
+  async removeExpense(id: string): Promise<void> {
+    if (this.connected()) {
+      await this.supabase.from('expenses').delete().eq('id', id);
+    }
+    this.expenses.update(list => list.filter(e => e.id !== id));
+    this.saveToLocal();
+  }
+
   async addInvoice(inv: Omit<Invoice, 'id' | 'num'>): Promise<Invoice> {
     const seqNum = this.seq();
-    const num = `${this.business().prefix}-2026-${String(seqNum).padStart(3, '0')}`;
+    const num = `${this.business().prefix}-${new Date().getFullYear()}-${String(seqNum).padStart(3, '0')}`;
 
     if (this.connected()) {
       const { data, error } = await this.supabase
@@ -275,6 +339,9 @@ export class DataService {
           due_date: inv.due,
           status: inv.status,
           notes: inv.method,
+          invoice_notes: inv.notes || '',
+          extra_charge: inv.extraCharge ?? 0,
+          extra_description: inv.extraDescription ?? '',
           business_id: this.getBusinessId() || null,
         })
         .select()
@@ -289,6 +356,9 @@ export class DataService {
           due_date: inv.due,
           status: inv.status,
           notes: inv.method,
+          invoice_notes: inv.notes || '',
+          extra_charge: inv.extraCharge ?? 0,
+          extra_description: inv.extraDescription ?? '',
           business_id: this.getBusinessId() || null,
         }));
       }
@@ -297,9 +367,12 @@ export class DataService {
         for (const item of inv.items) {
           const itemRes = await this.supabase.from('invoice_items').insert({
             invoice_id: data.id,
+            tool_id: item.toolId || null,
             tool_name: item.name,
             price_day: item.priceDay,
             days: item.days,
+            quantity: item.quantity || 1,
+            delivered: item.delivered || false,
           });
           if (itemRes.error) {
             console.error('[RentaObra] Error insertando item:', itemRes.error.message);
@@ -340,21 +413,44 @@ export class DataService {
           due_date: inv.due,
           status: inv.status,
           notes: inv.method,
+          invoice_notes: inv.notes || '',
+          extra_charge: inv.extraCharge ?? 0,
+          extra_description: inv.extraDescription ?? '',
         })
         .eq('id', inv.id);
 
-      if (!error) {
+      if (error) {
+        console.error('[RentaObra] Error updateInvoice:', error.message, error.details);
+        const fallback = await this.supabase
+          .from('invoices')
+          .update({
+            client_id: inv.clientId,
+            date: inv.date,
+            due_date: inv.due,
+            status: inv.status,
+            notes: inv.method,
+            extra_charge: inv.extraCharge ?? 0,
+            extra_description: inv.extraDescription ?? '',
+          })
+          .eq('id', inv.id);
+        if (fallback.error) {
+          console.error('[RentaObra] Error updateInvoice fallback:', fallback.error.message);
+        }
+      }
+
+      if (!error || true) {
         await this.supabase.from('invoice_items').delete().eq('invoice_id', inv.id);
         for (const item of inv.items) {
           await this.supabase.from('invoice_items').insert({
             invoice_id: inv.id,
+            tool_id: item.toolId || null,
             tool_name: item.name,
             price_day: item.priceDay,
             days: item.days,
+            quantity: item.quantity || 1,
+            delivered: item.delivered || false,
           });
         }
-      } else {
-        console.error('[RentaObra] Error updateInvoice:', error);
       }
     }
     this.invoices.update(list => list.map(i => i.id === inv.id ? inv : i));
@@ -374,14 +470,47 @@ export class DataService {
     const inv = this.invoices().find(i => i.id === id);
     if (!inv) return;
     const newStatus = inv.status === 'pagada' ? 'pendiente' : 'pagada';
+    const allDelivered = newStatus === 'pagada';
 
     if (this.connected()) {
       await this.supabase.from('invoices').update({ status: newStatus }).eq('id', id);
+      if (allDelivered) {
+        for (const item of inv.items) {
+          item.delivered = true;
+        }
+        await this.supabase.from('invoice_items').update({ delivered: true }).eq('invoice_id', id);
+      }
     }
 
     this.invoices.update(list =>
-      list.map(i => i.id === id ? { ...i, status: newStatus } : i)
+      list.map(i => i.id === id ? { ...i, status: newStatus, items: i.items.map(item => ({ ...item, delivered: allDelivered })) } : i)
     );
+    this.saveToLocal();
+  }
+
+  async toggleItemDelivered(invoiceId: string, itemIndex: number): Promise<void> {
+    const inv = this.invoices().find(i => i.id === invoiceId);
+    if (!inv || !inv.items[itemIndex]) return;
+
+    inv.items[itemIndex].delivered = !inv.items[itemIndex].delivered;
+    const allDelivered = inv.items.every(i => i.delivered);
+
+    if (allDelivered && inv.status !== 'pagada') {
+      inv.status = 'pagada';
+      if (this.connected()) {
+        await this.supabase.from('invoices').update({ status: 'pagada' }).eq('id', invoiceId);
+      }
+    }
+
+    if (this.connected()) {
+      const item = inv.items[itemIndex];
+      const itemsRes = await this.supabase.from('invoice_items').select('id').eq('invoice_id', invoiceId).eq('tool_name', item.name);
+      if (itemsRes.data && itemsRes.data.length > 0) {
+        await this.supabase.from('invoice_items').update({ delivered: item.delivered }).eq('id', itemsRes.data[0].id);
+      }
+    }
+
+    this.invoices.update(list => list.map(i => i.id === invoiceId ? { ...i } : i));
     this.saveToLocal();
   }
 
@@ -389,10 +518,11 @@ export class DataService {
     this.business.update(current => ({ ...current, ...b }));
 
     if (this.connected() && this.business().id) {
-      await this.supabase
+      const { error } = await this.supabase
         .from('businesses')
-        .update({ name: b.name, nif: b.nit, phone: b.phone, address: b.addr, email: b.email })
+        .update({ name: b.name, nif: b.nit, phone: b.phone, address: b.addr, email: b.email, iva_rate: b.rate, prefix: b.prefix, logo_url: b.logoUrl, admin_name: b.adminName, payment_account: b.paymentAccount })
         .eq('id', this.business().id);
+      if (error) console.error('[RentaObra] Error updateBusiness:', error.message);
     }
     this.saveToLocal();
   }
@@ -410,11 +540,13 @@ export class DataService {
   }
 
   getActiveToolCount(toolId: string): number {
+    const tool = this.getToolById(toolId);
+    if (!tool) return 0;
     return this.invoices()
       .filter(inv => inv.status === 'pendiente' || inv.status === 'vencida')
       .reduce((count, inv) => {
-        const item = inv.items.find(i => i.toolId === toolId);
-        return count + (item ? 1 : 0);
+        const item = inv.items.find(i => i.toolId === toolId || i.name === tool.name);
+        return count + (item ? (item.quantity || 1) : 0);
       }, 0);
   }
 }

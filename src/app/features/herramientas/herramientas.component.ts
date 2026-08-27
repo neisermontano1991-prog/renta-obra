@@ -58,8 +58,10 @@ export class HerramientasComponent {
     this.showForm.set(false);
   }
 
-  removeTool(id: string): void {
-    this.data.removeTool(id);
+  removeTool(id: string, name: string): void {
+    if (confirm(`¿Eliminar la herramienta "${name}"?`)) {
+      this.data.removeTool(id);
+    }
   }
 
   onFieldChange(field: 'name' | 'priceDay' | 'stock', event: Event): void {

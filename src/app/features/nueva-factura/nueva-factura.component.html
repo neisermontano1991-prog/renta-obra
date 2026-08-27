@@ -42,7 +42,7 @@
         <div style="margin-top: var(--space-4);">
           <div class="field" *ngIf="!showNewClient()">
             <label>Seleccionar cliente</label>
-            <select (change)="onClientChange($event)">
+            <select [value]="clientId() ?? ''" (change)="onClientChange($event)">
               <option [value]="''">— Selecciona un cliente —</option>
               <option *ngFor="let c of clients()" [value]="c.id">{{ c.name }}</option>
             </select>
@@ -80,7 +80,7 @@
         <div style="margin-top: var(--space-4);">
           <div class="item-row" *ngFor="let line of lines(); let i = index">
             <div class="field">
-              <select [value]="line.toolId ?? ''" (change)="onToolSelect($event, i)">
+              <select [value]="line.toolId ?? ''" (change)="onToolSelect($any($event.target).value, i)">
                 <option value="">Seleccionar herramienta…</option>
                 <option *ngFor="let t of toolOptions()" [value]="t.id">{{ t.name }}</option>
               </select>
@@ -90,12 +90,16 @@
               <input type="number" min="1" [value]="line.days" (input)="onDaysChange($event, i)" />
             </div>
             <div class="field">
+              <label>Cantidad</label>
+              <input type="number" min="1" [value]="line.quantity" (input)="onQuantityChange($event, i)" />
+            </div>
+            <div class="field">
               <label>Precio / día</label>
               <input type="text" [value]="line.priceDay | currencyFormat" disabled />
             </div>
             <div class="field">
               <label>Subtotal</label>
-              <input type="text" [value]="(line.priceDay * line.days) | currencyFormat" disabled />
+              <input type="text" [value]="(line.priceDay * line.days * line.quantity) | currencyFormat" disabled />
             </div>
             <button class="icon-btn danger" (click)="removeLine(i)">
               <svg viewBox="0 0 24 24" width="16" height="16"><path d="M18 6L6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -108,24 +112,50 @@
       </div>
 
       <div class="card">
+        <h4>Notas / Observaciones</h4>
+        <div style="margin-top: var(--space-4);">
+          <div class="field">
+            <textarea
+              rows="3"
+              placeholder="Agregar notas o instrucciones especiales para esta factura..."
+              [value]="notes()"
+              (input)="notes.set($any($event.target).value)"
+              style="width: 100%; resize: vertical;"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
         <div class="totals-box">
           <div class="line">
             <span>Base imponible</span>
             <span class="num">{{ base() | currencyFormat }}</span>
           </div>
           <div class="line">
+            <span>IVA ({{ ivaRate() }}%)</span>
+            <span class="num">{{ iva() | currencyFormat }}</span>
+          </div>
+          <div class="line">
             <span style="display:flex; align-items:center; gap: var(--space-2);">
-              IVA
+              Valor adicional
+              <input
+                type="text"
+                placeholder="Transporte, etc."
+                [value]="extraDescription()"
+                (input)="extraDescription.set($any($event.target).value)"
+                style="width: 140px; font-size: var(--fs-sm);"
+              />
+            </span>
+            <span style="display:flex; align-items:center; gap: var(--space-2);">
               <input
                 type="number"
                 min="0"
-                max="100"
-                style="width: 60px; text-align: right;"
-                [value]="ivaRate()"
-                (input)="onIvaChange($event)"
-              />%
+                style="width: 100px; text-align: right;"
+                [value]="extraCharge()"
+                (input)="onExtraChargeChange($event)"
+              />
             </span>
-            <span class="num">{{ iva() | currencyFormat }}</span>
           </div>
           <div class="line total">
             <span>Total</span>
@@ -151,7 +181,11 @@
         [invoiceDate]="date()"
         [invoiceDue]="due()"
         [invoiceMethod]="method()"
+        [invoiceNotes]="notes()"
         [ivaRate]="ivaRate()"
+        [extraCharge]="extraCharge()"
+        [extraDescription]="extraDescription()"
+        [invoicePaymentAccount]="business().paymentAccount"
       />
     </div>
   </div>

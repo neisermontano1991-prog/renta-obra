@@ -36,12 +36,12 @@
     <div class="tool-row" *ngFor="let t of toolData()">
       <div class="tool-info">
         <span class="tool-name">{{ t.name }}</span>
-        <span class="tool-meta">{{ t.priceDay | currencyFormat }}/día · Stock: {{ t.stock }}</span>
+        <span class="tool-meta">{{ t.priceDay | currencyFormat }}/día · Disponible: {{ t.stock - t.activeRentals }}</span>
       </div>
       <div class="tool-actions">
         <span class="pill-stock" [class.pill-stock-active]="t.activeRentals > 0">{{ t.activeRentals }} en alquiler</span>
         <button class="btn btn-sm btn-secondary" (click)="startEdit(t)">Editar</button>
-        <button class="btn btn-sm btn-secondary" style="color: var(--danger);" (click)="removeTool(t.id ?? '')">Quitar</button>
+        <button class="btn btn-sm btn-secondary" style="color: var(--danger);" (click)="removeTool(t.id ?? '', t.name)">Quitar</button>
       </div>
     </div>
     <div *ngIf="toolData().length === 0" class="empty-state">

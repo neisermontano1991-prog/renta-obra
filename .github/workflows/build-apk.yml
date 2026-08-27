@@ -1,0 +1,88 @@
+name: Build Android APK (TWA)
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Angular
+        run: npx ng build --configuration=production
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Bubblewrap
+        run: npm install -g @nicepkg/bubblewrap
+
+      - name: Create TWA manifest
+        run: |
+          cat > twa-manifest.json << 'EOF'
+          {
+            "name": "RentaObra",
+            "shortName": "RentaObra",
+            "themeColor": "#4f46e5",
+            "backgroundColor": "#f8fafc",
+            "startUrl": "/panel",
+            "scope": "/",
+            "signed": false,
+            "icon": "dist/renta-obra/assets/icons/icon-512x512.png",
+            "maskableIcon": "dist/renta-obra/assets/icons/icon-192x192.png",
+            "isMetaMaskEnabled": false,
+            "isVerified": false,
+            "appVersion": "1.0.0",
+            "useBrowserOnChromeOS": true,
+            "fallbacking": {
+              "checkSignature": false
+            },
+            "orientation": "portrait",
+            "display": "standalone"
+          }
+          EOF
+
+      - name: Generate Android project
+        run: |
+          bubblewrap init --manifest=twa-manifest.json || true
+          # If prompt needed, use defaults
+        env:
+          BUBBLEWRAP_SKIP_PROMPTS: "true"
+
+      - name: Build APK
+        run: |
+          cd android
+          ./gradlew assembleRelease
+        continue-on-error: true
+
+      - name: Find APK
+        id: find-apk
+        run: |
+          APK_PATH=$(find android -name "*.apk" -type f 2>/dev/null | head -1)
+          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rentaobra-apk
+          path: ${{ steps.find-apk.outputs.apk_path }}
+          if-no-files-found: ignore
+          retention-days: 30

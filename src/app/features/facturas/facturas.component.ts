@@ -19,6 +19,7 @@ export class FacturasComponent {
 
   activeFilter = signal<'todas' | 'pagada' | 'pendiente' | 'vencida'>('todas');
   searchQuery = signal('');
+  expandedInvoice = signal<string | null>(null);
 
   private invoices = this.data.invoices$;
 
@@ -59,12 +60,20 @@ export class FacturasComponent {
     this.data.toggleInvoiceStatus(id);
   }
 
+  toggleExpanded(id: string): void {
+    this.expandedInvoice.update(current => current === id ? null : id);
+  }
+
+  toggleItemDelivered(invoiceId: string, itemIndex: number): void {
+    this.data.toggleItemDelivered(invoiceId, itemIndex);
+  }
+
   openInvoice(inv: Invoice): void {
     this.router.navigate(['/nueva-factura'], { queryParams: { id: inv.id } });
   }
 
   total(inv: Invoice): number {
-    return inv.items.reduce((s, i) => s + i.priceDay * i.days, 0);
+    return inv.items.reduce((s, i) => s + i.priceDay * i.days * (i.quantity || 1), 0) + (inv.extraCharge ?? 0);
   }
 
   clientName(clientId: string): string {

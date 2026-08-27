@@ -7,6 +7,7 @@ export const routes: Routes = [
   { path: 'nueva-factura', loadComponent: () => import('./features/nueva-factura/nueva-factura.component').then(m => m.NuevaFacturaComponent) },
   { path: 'clientes', loadComponent: () => import('./features/clientes/clientes.component').then(m => m.ClientesComponent) },
   { path: 'herramientas', loadComponent: () => import('./features/herramientas/herramientas.component').then(m => m.HerramientasComponent) },
+  { path: 'gastos', loadComponent: () => import('./features/gastos/gastos.component').then(m => m.GastosComponent) },
   { path: 'ajustes', loadComponent: () => import('./features/ajustes/ajustes.component').then(m => m.AjustesComponent) },
   { path: 'ios/nueva-factura', loadComponent: () => import('./features/ios-nueva-factura/ios-nueva-factura.component').then(m => m.IosNuevaFacturaComponent) },
   { path: 'ios/transferencia', loadComponent: () => import('./features/ios-transferencia/ios-transferencia.component').then(m => m.IosTransferenciaComponent) },

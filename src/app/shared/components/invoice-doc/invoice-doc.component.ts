@@ -10,12 +10,19 @@ import { Business, Client, InvoiceItem } from '../../../core/models/index';
     <div class="invoice-doc">
       <div class="doc-head">
         <div class="doc-brand">
-          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px;">
-            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-            <polyline points="9 22 9 12 15 12 15 22"/>
-          </svg>
-          {{ business().name }}
+          @if (business().logoUrl) {
+            <img [src]="business().logoUrl" alt="Logo" style="height: 48px; max-width: 120px; object-fit: contain; margin-bottom: 8px;" />
+          } @else {
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px;">
+              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+          }
+          <div style="font-weight: var(--fw-bold); font-size: var(--fs-lg);">{{ business().name }}</div>
           <small>NIT: {{ business().nit }} &middot; {{ business().phone }} &middot; {{ business().addr }}</small>
+          @if (business().email) {
+            <small>{{ business().email }}</small>
+          }
         </div>
         <div class="doc-title">
           <h2>FACTURA</h2>
@@ -39,6 +46,12 @@ import { Business, Client, InvoiceItem } from '../../../core/models/index';
           <div class="label">Condiciones de pago</div>
           <div>{{ invoiceMethod() }}</div>
         </div>
+        @if (invoicePaymentAccount()) {
+          <div class="doc-block">
+            <div class="label">Cuenta de pago</div>
+            <div>{{ invoicePaymentAccount() }}</div>
+          </div>
+        }
       </div>
 
       <table class="doc-table">
@@ -47,20 +60,22 @@ import { Business, Client, InvoiceItem } from '../../../core/models/index';
             <th>Herramienta</th>
             <th class="right">Valor / día</th>
             <th class="right">Días</th>
+            <th class="right">Cant.</th>
             <th class="right">Total</th>
           </tr>
         </thead>
         <tbody>
-          @for (item of items(); track item.toolId) {
+          @for (item of items(); track $index) {
             <tr>
               <td>{{ item.name }}</td>
               <td class="right">{{ item.priceDay | currencyFormat }}</td>
               <td class="right">{{ item.days }}</td>
-              <td class="right">{{ item.priceDay * item.days | currencyFormat }}</td>
+              <td class="right">{{ item.quantity || 1 }}</td>
+              <td class="right">{{ item.priceDay * item.days * (item.quantity || 1) | currencyFormat }}</td>
             </tr>
           } @empty {
             <tr>
-              <td colspan="4" style="text-align:center; color: var(--meta);">Sin líneas</td>
+              <td colspan="5" style="text-align:center; color: var(--meta);">Sin líneas</td>
             </tr>
           }
         </tbody>
@@ -75,11 +90,32 @@ import { Business, Client, InvoiceItem } from '../../../core/models/index';
           <span class="lbl">IVA ({{ ivaRate() }}%)</span>
           <span class="val">{{ iva() | currencyFormat }}</span>
         </div>
+        @if (extraCharge() > 0) {
+          <div class="row">
+            <span class="lbl">{{ extraDescription() || 'Valor adicional' }}</span>
+            <span class="val">{{ extraCharge() | currencyFormat }}</span>
+          </div>
+        }
         <div class="row grand">
           <span class="lbl">Total</span>
           <span class="val">{{ total() | currencyFormat }}</span>
         </div>
       </div>
+
+      @if (invoiceNotes()) {
+        <div class="doc-notes">
+          <div class="label">Notas</div>
+          <div>{{ invoiceNotes() }}</div>
+        </div>
+      }
+
+      @if (business().adminName) {
+        <div class="doc-signature">
+          <div class="doc-sig-line"></div>
+          <div class="doc-sig-label">{{ business().adminName }}</div>
+          <div class="doc-sig-sub">Administrador</div>
+        </div>
+      }
 
       <div class="doc-foot">
         ¡Gracias por su preferencia!
@@ -95,13 +131,17 @@ export class InvoiceDocComponent {
   invoiceDate = input('');
   invoiceDue = input('');
   invoiceMethod = input('');
-  ivaRate = input(21);
+  invoiceNotes = input('');
+  ivaRate = input(19);
+  extraCharge = input(0);
+  extraDescription = input('');
+  invoicePaymentAccount = input('');
 
   readonly base = computed(() =>
-    this.items().reduce((sum, i) => sum + i.priceDay * i.days, 0)
+    this.items().reduce((sum, i) => sum + i.priceDay * i.days * (i.quantity || 1), 0)
   );
 
   readonly iva = computed(() => (this.base() * this.ivaRate()) / 100);
 
-  readonly total = computed(() => this.base() + this.iva());
+  readonly total = computed(() => this.base() + this.extraCharge());
 }

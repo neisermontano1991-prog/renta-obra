@@ -7,6 +7,9 @@ export interface Business {
   email: string;
   rate: number;
   prefix: string;
+  logoUrl: string;
+  adminName: string;
+  paymentAccount: string;
 }
 
 export interface Client {
@@ -30,6 +33,8 @@ export interface InvoiceItem {
   name: string;
   priceDay: number;
   days: number;
+  quantity?: number;
+  delivered?: boolean;
 }
 
 export interface Invoice {
@@ -41,6 +46,18 @@ export interface Invoice {
   method: string;
   status: 'pagada' | 'pendiente' | 'vencida';
   items: InvoiceItem[];
+  notes?: string;
+  extraCharge?: number;
+  extraDescription?: string;
+}
+
+export interface Expense {
+  id?: string;
+  date: string;
+  description: string;
+  amount: number;
+  category: string;
+  invoiceId?: string;
 }
 
 export type InvoiceStatus = Invoice['status'];

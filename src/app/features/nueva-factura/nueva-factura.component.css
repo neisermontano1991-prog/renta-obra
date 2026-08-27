@@ -35,8 +35,8 @@
 
 .item-row {
   display: grid;
-  grid-template-columns: 1fr 100px 120px 120px 40px;
-  gap: var(--space-3);
+  grid-template-columns: 1.5fr 80px 80px 110px 130px 36px;
+  gap: var(--space-2);
   align-items: end;
   padding: var(--space-3) 0;
   border-bottom: 1px solid var(--border-soft);
