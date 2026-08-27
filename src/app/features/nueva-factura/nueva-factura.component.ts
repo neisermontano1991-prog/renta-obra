@@ -5,7 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { DataService } from '../../core/services/data.service';
 import { CurrencyFormatPipe } from '../../core/pipes/format.pipe';
 import { InvoiceDocComponent } from '../../shared/components/invoice-doc/invoice-doc.component';
-import { InvoiceItem, Client } from '../../core/models';
+import { InvoiceItem, InvoicePayment, Client } from '../../core/models';
 
 interface DraftLine {
   toolId: string | null;
@@ -34,6 +34,8 @@ export class NuevaFacturaComponent implements OnInit {
 
   private pendingInvoiceItems: { items: InvoiceItem[]; clientId: string | null } | null = null;
   private pendingEditId: string | null = null;
+
+  payments = signal<InvoicePayment[]>([]);
 
   private _dataReadyEffect = effect(() => {
     const tools = this.tools();
@@ -129,6 +131,7 @@ export class NuevaFacturaComponent implements OnInit {
     this.notes.set(inv.notes || '');
     this.extraCharge.set(inv.extraCharge ?? 0);
     this.extraDescription.set(inv.extraDescription ?? '');
+    this.payments.set(inv.payments ?? []);
 
     if (this.tools().length > 0) {
       const mappedLines = inv.items.map(i => {

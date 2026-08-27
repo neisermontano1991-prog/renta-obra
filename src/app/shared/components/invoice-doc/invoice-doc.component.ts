@@ -1,6 +1,6 @@
 import { Component, computed, input } from '@angular/core';
 import { CurrencyFormatPipe, DateFormatPipe } from '../../../core/pipes/format.pipe';
-import { Business, Client, InvoiceItem } from '../../../core/models/index';
+import { Business, Client, InvoiceItem, InvoicePayment } from '../../../core/models/index';
 
 @Component({
   selector: 'app-invoice-doc',
@@ -100,14 +100,36 @@ import { Business, Client, InvoiceItem } from '../../../core/models/index';
           <span class="lbl">Total</span>
           <span class="val">{{ total() | currencyFormat }}</span>
         </div>
+        @if (paid() > 0) {
+          <div class="row">
+            <span class="lbl">Abonado</span>
+            <span class="val">- {{ paid() | currencyFormat }}</span>
+          </div>
+          <div class="row grand">
+            <span class="lbl">Saldo pendiente</span>
+            <span class="val">{{ pending() | currencyFormat }}</span>
+          </div>
+        }
       </div>
 
-      @if (invoiceNotes()) {
-        <div class="doc-notes">
-          <div class="label">Notas</div>
-          <div>{{ invoiceNotes() }}</div>
-        </div>
-      }
+@if (invoiceNotes()) {
+          <div class="doc-notes">
+            <div class="label">Notas</div>
+            <div>{{ invoiceNotes() }}</div>
+          </div>
+        }
+
+        @if (payments().length > 0) {
+          <div class="doc-notes">
+            <div class="label">Abonos registrados</div>
+            @for (p of payments(); track p.id ?? $index) {
+              <div style="display: flex; justify-content: space-between;">
+                <span>{{ p.date | dateFormat }}</span>
+                <span>{{ p.amount | currencyFormat }}</span>
+              </div>
+            }
+          </div>
+        }
 
       @if (business().adminName) {
         <div class="doc-signature">
@@ -136,6 +158,7 @@ export class InvoiceDocComponent {
   extraCharge = input(0);
   extraDescription = input('');
   invoicePaymentAccount = input('');
+  payments = input<InvoicePayment[]>([]);
 
   readonly base = computed(() =>
     this.items().reduce((sum, i) => sum + i.priceDay * i.days * (i.quantity || 1), 0)
@@ -144,4 +167,10 @@ export class InvoiceDocComponent {
   readonly iva = computed(() => (this.base() * this.ivaRate()) / 100);
 
   readonly total = computed(() => this.base() + this.extraCharge());
+
+  readonly paid = computed(() =>
+    this.payments().reduce((sum, p) => sum + p.amount, 0)
+  );
+
+  readonly pending = computed(() => this.total() - this.paid());
 }

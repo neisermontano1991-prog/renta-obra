@@ -1,0 +1,47 @@
+<section class="login-screen">
+  <div class="login-card">
+    <div class="login-brand">
+      <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px; color: var(--accent);">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      <h1>RentaObra</h1>
+      <p>Inicia sesión para acceder</p>
+    </div>
+
+    <div class="login-form">
+      <input
+        type="email"
+        placeholder="Correo electrónico"
+        [value]="email()"
+        (input)="onEmail($event)"
+        autocomplete="email"
+      />
+      <input
+        type="password"
+        placeholder="Contraseña"
+        [value]="password()"
+        (input)="onPassword($event)"
+        autocomplete="current-password"
+      />
+
+      @if (error()) {
+        <div class="login-error">{{ error() }}</div>
+      }
+
+      <button class="btn btn-primary btn-block" [disabled]="loading()" (click)="submit()">
+        {{ loading() ? 'Ingresando…' : 'Ingresar' }}
+      </button>
+
+      <div class="login-divider">o</div>
+
+      <button class="btn btn-secondary btn-block" (click)="enterDemo()">
+        Ver en modo demostración
+      </button>
+
+      <p class="login-hint">
+        Si tu correo no existe, se creará tu cuenta automáticamente al ingresar.
+      </p>
+    </div>
+  </div>
+</section>

@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../core/services/data.service';
 import { CurrencyFormatPipe, DateFormatPipe } from '../../core/pipes/format.pipe';
+import { Invoice } from '../../core/models';
 
 @Component({
   selector: 'app-android-facturas',
@@ -29,8 +30,8 @@ export class AndroidFacturasComponent {
     this.activeFilter.set(f);
   }
 
-  invoiceTotal(inv: { items: { priceDay: number; days: number }[] }): number {
-    return inv.items.reduce((s, i) => s + i.priceDay * i.days, 0);
+  invoiceTotal(inv: Invoice): number {
+    return this.data.getInvoiceTotal(inv);
   }
 
   clientName(clientId: string): string {

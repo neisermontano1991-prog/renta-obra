@@ -29,11 +29,11 @@ export class ClientesComponent {
         inv => inv.status === 'pendiente' || inv.status === 'vencida'
       );
       const totalAmount = clientInvoices.reduce(
-        (sum, inv) => sum + inv.items.reduce((s, i) => s + i.priceDay * i.days, 0),
+        (sum, inv) => sum + this.data.getInvoiceTotal(inv),
         0
       );
       const pendingAmount = pending.reduce(
-        (sum, inv) => sum + inv.items.reduce((s, i) => s + i.priceDay * i.days, 0),
+        (sum, inv) => sum + this.data.getInvoicePending(inv),
         0
       );
       return {

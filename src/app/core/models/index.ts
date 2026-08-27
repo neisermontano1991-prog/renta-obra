@@ -37,6 +37,12 @@ export interface InvoiceItem {
   delivered?: boolean;
 }
 
+export interface InvoicePayment {
+  id?: string;
+  date: string;
+  amount: number;
+}
+
 export interface Invoice {
   id?: string;
   num: string;
@@ -49,6 +55,8 @@ export interface Invoice {
   notes?: string;
   extraCharge?: number;
   extraDescription?: string;
+  payments?: InvoicePayment[];
+  createdBy?: string;
 }
 
 export interface Expense {
@@ -61,6 +69,12 @@ export interface Expense {
 }
 
 export type InvoiceStatus = Invoice['status'];
+
+export interface SessionUser {
+  email: string;
+  name: string;
+  id?: string;
+}
 
 export interface AppState {
   business: Business;

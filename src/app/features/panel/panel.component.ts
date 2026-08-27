@@ -46,7 +46,7 @@ export class PanelComponent {
         const d = new Date(inv.date + 'T00:00:00');
         return d.getMonth() === month && d.getFullYear() === year;
       })
-      .reduce((sum, inv) => sum + inv.items.reduce((s, i) => s + i.priceDay * i.days * (i.quantity || 1), 0), 0);
+      .reduce((sum, inv) => sum + this.data.getInvoiceTotal(inv), 0);
     return base - this.gastosDelMes();
   });
 
@@ -55,7 +55,7 @@ export class PanelComponent {
       inv => inv.status === 'pendiente' || inv.status === 'vencida'
     );
     const total = pending.reduce(
-      (sum, inv) => sum + inv.items.reduce((s, i) => s + i.priceDay * i.days * (i.quantity || 1), 0),
+      (sum, inv) => sum + this.data.getInvoicePending(inv),
       0
     );
     return { total, count: pending.length };
@@ -96,7 +96,7 @@ export class PanelComponent {
           const invDate = new Date(inv.date + 'T00:00:00');
           return invDate.getMonth() === m && invDate.getFullYear() === y && inv.status === 'pagada';
         })
-        .reduce((sum, inv) => sum + inv.items.reduce((s, i) => s + i.priceDay * i.days * (i.quantity || 1), 0), 0) - gastos;
+        .reduce((sum, inv) => sum + this.data.getInvoiceTotal(inv), 0) - gastos;
       months.push({ label: monthNames[m], amount: Math.max(amount, 0), month: m, year: y });
     }
     return months;
@@ -129,6 +129,6 @@ export class PanelComponent {
   }
 
   invoiceTotal(inv: Invoice): number {
-    return inv.items.reduce((s, i) => s + i.priceDay * i.days * (i.quantity || 1), 0);
+    return this.data.getInvoiceTotal(inv);
   }
 }

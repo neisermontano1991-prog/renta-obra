@@ -21,7 +21,7 @@
 | PWA | Angular Service Worker (`@angular/service-worker`) |
 | Lenguaje | TypeScript 5.7 |
 | Estilos | CSS puro (sin framework CSS externo) |
-| Despliegue | Netlify |
+| Despliegue | GitHub Pages (+ Github Actions) |
 | APK (TWA) | PWABuilder / Bubblewrap via GitHub Actions |
 
 ---
@@ -105,6 +105,14 @@ renta-obra/
 │           │   ├── ajustes.component.ts         # Configuracion del negocio
 │           │   ├── ajustes.component.html
 │           │   └── ajustes.component.css
+│           ├── gastos/
+│           │   ├── gastos.component.ts          # Gastos operativos
+│           │   ├── gastos.component.html
+│           │   ├── gastos.component.css
+│           ├── login/
+│           │   ├── login.component.ts           # Login / modo demo
+│           │   ├── login.component.html
+│           │   └── login.component.css
 │           ├── ios-nueva-factura/
 │           │   ├── ios-nueva-factura.component.ts   # Vista iOS de nueva factura
 │           │   ├── ios-nueva-factura.component.html
@@ -123,6 +131,16 @@ renta-obra/
 ├── database-migration3.sql             # Migracion 3: Columnas faltantes (iva_rate, prefix, logo_url, invoice_notes)
 ├── database-migration4.sql             # Migracion 4: delivered, quantity, extra_charge, extra_description
 ├── database-migration-all.sql          # Migracion unificada (todas las anteriores)
+├── migrations/
+│   └── 002-payments-createdby.sql      # Migracion 5: payments (JSONB) + created_by
+├── .github/
+│   └── workflows/
+│       ├── build-apk.yml              # Build de APK (TWA)
+│       └── deploy-pages.yml           # Deploy a GitHub Pages
+├── public/
+│   ├── 404.html                       # Fallback SPA para GitHub Pages
+│   ├── manifest.json                  # Manifest PWA (requerido por PWABuilder)
+│   └── manifest.webmanifest
 ├── angular.json                        # Configuracion de Angular CLI
 ├── package.json                        # Dependencias del proyecto
 ├── tsconfig.json                       # Configuracion de TypeScript
@@ -1412,3 +1430,111 @@ Archivo: `.github/workflows/build-apk.yml`
 1. Ir a la pestana "Actions" del repositorio en GitHub
 2. Hacer click en el workflow mas reciente
 3. En "Artifacts", descargar `rentaobra-apk`
+
+---
+
+## 15. Nuevas Funcionalidades
+
+### 15.1 Gastos operativos
+
+Modelo `Expense`:
+- `id`, `date` (ISO), `description`, `amount`, `category`
+- Categorias: Transporte, Gasolina, Mantenimiento, Herramientas, Personal, Imprevisto, Otro
+
+Servicio (`DataService`):
+- `expenses` signal + `expenses$` (solo lectura) + `totalGastado` (computed)
+- `addExpense(expense)` y `removeExpense(id)` con CRUD en Supabase (tabla `expenses`, columna `business_id`)
+- `gastosDelMes(mes)` filtra por año+mes
+
+Componente: `GastosComponent` en `src/app/features/gastos/`
+- Formulario para registrar gasto, lista con total mensual y total general
+- Ruta `/gastos`, enlace en la sidebar (icono de billetera)
+
+Panel: `ingresosDelMes` = facturas pagadas del mes (`getInvoiceTotal`) − `gastosDelMes`. KPI de gastos agregado.
+
+### 15.2 Cuenta de pago del negocio
+
+- Campo `paymentAccount` en `Business` (guardado en columna `payment_account` de Supabase)
+- Editado desde Ajustes (textarea) y mostrado en la factura impresa (`InvoiceDocComponent` input `invoicePaymentAccount`)
+- Sirve para indicar la cuenta bancaria o de Nequi/Bancolombia donde el cliente hace el abono
+
+### 15.3 Panel con filtro mensual
+
+- Signal `selectedMonth` (por defecto el mes actual)
+- Las barras del grafico por mes son clicables y resaltan el mes activo (`selectMonth`)
+- `gastosDelMes` (computed) alimenta el KPI de gastos del mes
+- `recentInvoices` se filtra por el mes seleccionado
+
+### 15.4 Abonos (pagos parciales)
+
+Modelo `InvoicePayment`:
+- `id?`, `date` (ISO), `amount`
+- Se guarda en `Invoice.payments: InvoicePayment[]` (columna JSONB `payments` en Supabase)
+
+Servicio:
+- `addPayment(invoiceId, amount)`: agrega el abono, recalcula el estado (pasa a `pagada` cuando `paid >= total`) y sincroniza con Supabase
+- `toggleInvoiceStatus(→ pagada)`: registra automaticamente el pago completo pendiente con la fecha actual
+- `toggleItemDelivered` ya no marca la factura como pagada automaticamente (eso ahora lo hacen los abonos)
+- Totales centralizados:
+  - `getInvoiceTotal(inv)` = base (items × días × cantidad) + cargo extra
+  - `getInvoicePaid(inv)` = suma de `payments`
+  - `getInvoicePending(inv)` = total − pagado
+- `loadFromSupabase` parsea `payments` y `created_by`; guardar factura persiste ambos campos
+
+UI (FacturasComponent):
+- En la fila expandida: resumen Total / Abonado / Saldo, historial de abonos, e input + boton "Registrar abono" (validado contra el saldo)
+- `InvoiceDocComponent` muestra los abonos y el saldo pendiente en el documento impreso
+- `NuevaFacturaComponent` conserva los `payments` al editar una factura existente
+
+### 15.5 Login con usuarios
+
+Modelo `SessionUser`: `email`, `name`, `id?`
+
+Servicio:
+- `user` signal + `user$` + `demo` signal + `demoMode$`
+- `login(email, password)`: intenta `signInWithPassword`; si la cuenta no existe, la crea automaticamente con `signUp` (base de supabase)
+- `logout()`: cierra sesion. `restoreSession()` rehidrata desde `localStorage['rentaobra-session']`
+- `invoices$` ahora filtra por el correo del usuario logueado: cada operador ve solo las facturas que creo (las facturas legacy sin `created_by` son visibles para todos)
+
+UI:
+- `LoginComponent` en `src/app/features/login/` (ruta `/login`), con opcion "Ver en modo demostracion"
+- Guard de rutas `authGuard` en `app.routes.ts`: redirige a `/login` si no hay usuario ni modo demo
+- La sidebar muestra avatar/iniciales, nombre y correo, y boton "Cerrar sesion"
+- `AppComponent` detecta el modo demo (`demoMode$`) y muestra el banner "MODO DEMO"
+
+### 15.6 Modo demo
+
+- `enterDemo()`: activa el modo demo cargando los datos de ejemplo (`DEFAULT_BUSINESS`, `DEFAULT_CLIENTS`, `DEFAULT_TOOLS`, `DEFAULT_INVOICES`) y vacia los gastos
+- `exitDemo()`: sale del modo demo y recarga los datos reales (`init()`)
+- Banner azul persistente en la parte superior mientras este activo (para presentar la app sin exponer datos reales), con boton "Volver a mis datos"
+
+### 15.7 Cargo extra en todos los totales
+
+- Corregido el bug por el cual el cargo extra no se sumaba en algunos lugares:
+  - Panel (KPIs, grafico mensual, tabla de pendientes, total facturado)
+  - Detalle del cliente (total y pendiente por cliente)
+  - Facturas (listado, estado pendiente, abonos)
+  - Vista Android (`AndroidFacturasComponent` `invoiceTotal` usa `getInvoiceTotal`)
+- `totalFacturado` y `pendiente` del panel usan `getInvoiceTotal` / `getInvoicePaid` / `getInvoicePending`
+
+### 15.8 Migracion SQL (abonos y autor)
+
+Archivo: `migrations/002-payments-createdby.sql`
+
+Ejecutar en el SQL Editor de Supabase:
+
+```sql
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS payments JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS created_by TEXT;
+CREATE INDEX IF NOT EXISTS invoices_created_by_idx ON invoices (created_by);
+```
+
+Nota: la tabla `expenses` y la columna `payment_account` del negocio se crearon con el script de migracion anterior.
+
+### 15.9 PWA/Despliegue en GitHub Pages
+
+- Tras abandonar Netlify (proteccion por contrasena requiere plan Pro) y Surge (CLI inalcanzable), la app se desplego en GitHub Pages:
+  - Repositorio `neisermontano1991-prog/renta-obra`, URL `https://neisermontano1991-prog.github.io/renta-obra/`
+  - Build con `--base-href=/renta-obra/`, worklow `.github/workflows/deploy-pages.yml`
+  - `public/404.html` (fallback SPA) y manifiestos con rutas relativas (`start_url: "./panel"`, `scope: "./"`)
+  - PWABuilder genero exitosamente el APK desde esa URL

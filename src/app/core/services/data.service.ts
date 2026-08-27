@@ -1,9 +1,10 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { Business, Client, Tool, Invoice, InvoiceItem, Expense } from '../models';
+import { Business, Client, Tool, Invoice, InvoiceItem, Expense, SessionUser } from '../models';
 import { environment } from '../../../environments/environment';
 
 const STORAGE_KEY = 'rentaobra-state-v1';
+const SESSION_KEY = 'rentaobra-session';
 
 const DEFAULT_BUSINESS: Business = {
   name: 'RentaObra S.L.',
@@ -56,13 +57,24 @@ export class DataService {
   private invoices = signal<Invoice[]>(DEFAULT_INVOICES);
   private expenses = signal<Expense[]>([]);
   private seq = signal<number>(23);
+  private user = signal<SessionUser | null>(null);
+  private demo = signal(false);
 
   readonly business$ = this.business.asReadonly();
   readonly clients$ = this.clients.asReadonly();
   readonly tools$ = this.tools.asReadonly();
-  readonly invoices$ = this.invoices.asReadonly();
   readonly expenses$ = this.expenses.asReadonly();
   readonly isConnected = this.connected.asReadonly();
+  readonly user$ = this.user.asReadonly();
+  readonly demoMode$ = this.demo.asReadonly();
+
+  readonly invoices$ = computed(() => {
+    const all = this.invoices();
+    if (this.demo()) return all;
+    const u = this.user()?.email;
+    if (!u) return all;
+    return all.filter(inv => !inv.createdBy || inv.createdBy.toLowerCase() === u.toLowerCase());
+  });
 
   readonly invoicesCount = computed(() => this.invoices().length);
   readonly totalGastado = computed(() =>
@@ -71,7 +83,7 @@ export class DataService {
   readonly totalFacturado = computed(() =>
     this.invoices().reduce((sum, inv) => {
       if (inv.status === 'pagada') {
-        return sum + inv.items.reduce((s, item) => s + item.priceDay * item.days, 0);
+        return sum + this.getInvoiceTotal(inv);
       }
       return sum;
     }, 0)
@@ -83,6 +95,7 @@ export class DataService {
   }
 
   private async init(): Promise<void> {
+    this.restoreSession();
     try {
       await this.loadFromSupabase();
       this.connected.set(true);
@@ -91,6 +104,57 @@ export class DataService {
       console.warn('[RentaObra] Supabase no disponible, usando datos locales', err);
       this.loadFromLocalStorage();
     }
+  }
+
+  private restoreSession(): void {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      if (raw) {
+        const u = JSON.parse(raw);
+        if (u?.email) this.user.set(u);
+      }
+    } catch {}
+  }
+
+  async login(email: string, password: string): Promise<{ ok: boolean; error?: string }> {
+    try {
+      const { data, error } = await this.supabase.auth.signInWithPassword({ email, password });
+      if (error || !data.user) {
+        const signUp = await this.supabase.auth.signUp({ email, password });
+        if (signUp.error || !signUp.data.user) return { ok: false, error: signUp.error?.message || error?.message };
+        const u: SessionUser = { id: signUp.data.user.id, email, name: email.split('@')[0] };
+        this.user.set(u);
+        localStorage.setItem(SESSION_KEY, JSON.stringify(u));
+        return { ok: true };
+      }
+      const u: SessionUser = { id: data.user.id, email, name: email.split('@')[0] };
+      this.user.set(u);
+      localStorage.setItem(SESSION_KEY, JSON.stringify(u));
+      return { ok: true };
+    } catch (err: any) {
+      return { ok: false, error: err?.message || 'Error de conexión' };
+    }
+  }
+
+  logout(): void {
+    this.supabase.auth.signOut();
+    this.user.set(null);
+    localStorage.removeItem(SESSION_KEY);
+  }
+
+  enterDemo(): void {
+    this.demo.set(true);
+    this.business.set(DEFAULT_BUSINESS);
+    this.clients.set(DEFAULT_CLIENTS);
+    this.tools.set(DEFAULT_TOOLS);
+    this.invoices.set(DEFAULT_INVOICES);
+    this.expenses.set([]);
+  }
+
+  exitDemo(): void {
+    this.demo.set(false);
+    localStorage.setItem('rentaobra-noinit', 'false');
+    this.init();
   }
 
   private async loadFromSupabase(): Promise<void> {
@@ -148,6 +212,11 @@ export class DataService {
           .select('*')
           .eq('invoice_id', inv.id);
 
+        let payments: Invoice['payments'] = [];
+        if (Array.isArray(inv.payments)) {
+          payments = inv.payments.map((p: any) => ({ date: p.date, amount: p.amount }));
+        }
+
         invoices.push({
           id: inv.id,
           num: inv.number,
@@ -159,6 +228,8 @@ export class DataService {
           notes: inv.invoice_notes || '',
           extraCharge: inv.extra_charge || 0,
           extraDescription: inv.extra_description || '',
+          payments,
+          createdBy: inv.created_by || '',
           items: (itemsRes.data || []).map(i => ({
             toolId: i.tool_id || null,
             name: i.tool_name,
@@ -197,7 +268,13 @@ export class DataService {
         if (state.business) this.business.set(state.business);
         if (state.clients) this.clients.set(state.clients);
         if (state.tools) this.tools.set(state.tools);
-        if (state.invoices) this.invoices.set(state.invoices);
+        if (state.invoices) {
+          const all = state.invoices as Invoice[];
+          const u = this.user()?.email;
+          const filtered = u ? all.filter(inv => !inv.createdBy || inv.createdBy.toLowerCase() === u.toLowerCase()) : all;
+          this.invoices.set(filtered);
+        }
+        if (state.expenses) this.expenses.set(state.expenses);
         if (state.seq) this.seq.set(state.seq);
       }
     } catch {}
@@ -209,6 +286,7 @@ export class DataService {
       clients: this.clients(),
       tools: this.tools(),
       invoices: this.invoices(),
+      expenses: this.expenses(),
       seq: this.seq(),
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -342,6 +420,8 @@ export class DataService {
           invoice_notes: inv.notes || '',
           extra_charge: inv.extraCharge ?? 0,
           extra_description: inv.extraDescription ?? '',
+          payments: inv.payments || [],
+          created_by: this.user()?.email || '',
           business_id: this.getBusinessId() || null,
         })
         .select()
@@ -416,6 +496,7 @@ export class DataService {
           invoice_notes: inv.notes || '',
           extra_charge: inv.extraCharge ?? 0,
           extra_description: inv.extraDescription ?? '',
+          payments: inv.payments || [],
         })
         .eq('id', inv.id);
 
@@ -431,6 +512,7 @@ export class DataService {
             notes: inv.method,
             extra_charge: inv.extraCharge ?? 0,
             extra_description: inv.extraDescription ?? '',
+            payments: inv.payments || [],
           })
           .eq('id', inv.id);
         if (fallback.error) {
@@ -469,11 +551,22 @@ export class DataService {
   async toggleInvoiceStatus(id: string): Promise<void> {
     const inv = this.invoices().find(i => i.id === id);
     if (!inv) return;
-    const newStatus = inv.status === 'pagada' ? 'pendiente' : 'pagada';
-    const allDelivered = newStatus === 'pagada';
+    const markingPaid = inv.status !== 'pagada';
+    const newStatus = markingPaid ? 'pagada' : 'pendiente';
+    const allDelivered = markingPaid;
+
+    let payments = inv.payments ?? [];
+    if (markingPaid) {
+      const total = this.getInvoiceTotal(inv);
+      const alreadyPaid = this.getInvoicePaid(inv);
+      const restante = Math.max(total - alreadyPaid, 0);
+      if (restante > 0) {
+        payments = [...payments, { date: new Date().toISOString().slice(0, 10), amount: restante }];
+      }
+    }
 
     if (this.connected()) {
-      await this.supabase.from('invoices').update({ status: newStatus }).eq('id', id);
+      await this.supabase.from('invoices').update({ status: newStatus, payments }).eq('id', id);
       if (allDelivered) {
         for (const item of inv.items) {
           item.delivered = true;
@@ -483,7 +576,26 @@ export class DataService {
     }
 
     this.invoices.update(list =>
-      list.map(i => i.id === id ? { ...i, status: newStatus, items: i.items.map(item => ({ ...item, delivered: allDelivered })) } : i)
+      list.map(i => i.id === id ? { ...i, status: newStatus, payments, items: i.items.map(item => ({ ...item, delivered: allDelivered })) } : i)
+    );
+    this.saveToLocal();
+  }
+
+  async addPayment(invoiceId: string, amount: number): Promise<void> {
+    const inv = this.invoices().find(i => i.id === invoiceId);
+    if (!inv || amount <= 0) return;
+
+    const payments = [...(inv.payments ?? []), { date: new Date().toISOString().slice(0, 10), amount }];
+    const paidNow = payments.reduce((s, p) => s + p.amount, 0);
+    const total = this.getInvoiceTotal(inv);
+    const status: Invoice['status'] = paidNow >= total ? 'pagada' : 'pendiente';
+
+    if (this.connected()) {
+      await this.supabase.from('invoices').update({ payments, status }).eq('id', invoiceId);
+    }
+
+    this.invoices.update(list =>
+      list.map(i => i.id === invoiceId ? { ...i, payments, status } : i)
     );
     this.saveToLocal();
   }
@@ -493,14 +605,6 @@ export class DataService {
     if (!inv || !inv.items[itemIndex]) return;
 
     inv.items[itemIndex].delivered = !inv.items[itemIndex].delivered;
-    const allDelivered = inv.items.every(i => i.delivered);
-
-    if (allDelivered && inv.status !== 'pagada') {
-      inv.status = 'pagada';
-      if (this.connected()) {
-        await this.supabase.from('invoices').update({ status: 'pagada' }).eq('id', invoiceId);
-      }
-    }
 
     if (this.connected()) {
       const item = inv.items[itemIndex];
@@ -548,5 +652,18 @@ export class DataService {
         const item = inv.items.find(i => i.toolId === toolId || i.name === tool.name);
         return count + (item ? (item.quantity || 1) : 0);
       }, 0);
+  }
+
+  getInvoiceTotal(inv: Invoice): number {
+    const base = inv.items.reduce((s, i) => s + i.priceDay * i.days * (i.quantity || 1), 0);
+    return base + (inv.extraCharge ?? 0);
+  }
+
+  getInvoicePaid(inv: Invoice): number {
+    return (inv.payments ?? []).reduce((s, p) => s + p.amount, 0);
+  }
+
+  getInvoicePending(inv: Invoice): number {
+    return Math.max(this.getInvoiceTotal(inv) - this.getInvoicePaid(inv), 0);
   }
 }

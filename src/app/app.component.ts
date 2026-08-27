@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { SidebarComponent } from './shared/components/sidebar/sidebar.component';
 import { ToastComponent } from './shared/components/toast/toast.component';
+import { DataService } from './core/services/data.service';
 import { filter, map } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 
@@ -14,7 +15,10 @@ import { toSignal } from '@angular/core/rxjs-interop';
 })
 export class AppComponent {
   private router = inject(Router);
-  
+  private data = inject(DataService);
+
+  demoMode = this.data.demoMode$;
+
   isMobileView = signal(false);
   
   currentUrl = toSignal(
@@ -27,7 +31,7 @@ export class AppComponent {
   
   get showSidebar(): boolean {
     const url = this.currentUrl();
-    return !url.startsWith('/ios/') && !url.startsWith('/android/');
+    return !url.startsWith('/ios/') && !url.startsWith('/android/') && !url.startsWith('/login');
   }
   
   get currentView(): string {
@@ -43,5 +47,9 @@ export class AppComponent {
   
   navigateTo(view: string) {
     this.router.navigate(['/' + view]);
+  }
+
+  exitDemo(): void {
+    this.data.exitDemo();
   }
 }

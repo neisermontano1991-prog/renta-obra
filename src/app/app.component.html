@@ -3,6 +3,12 @@
     <app-sidebar [currentView]="currentView" (viewChange)="navigateTo($event)"></app-sidebar>
   }
   <main class="main" [class.main-full]="!showSidebar">
+    @if (demoMode()) {
+      <div class="demo-banner">
+        <span>MODO DEMO — Estás viendo datos de ejemplo</span>
+        <button class="btn btn-sm btn-secondary" (click)="exitDemo()">Volver a mis datos</button>
+      </div>
+    }
     <div class="container">
       <router-outlet></router-outlet>
     </div>

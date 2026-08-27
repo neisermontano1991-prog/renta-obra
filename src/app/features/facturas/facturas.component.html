@@ -32,6 +32,7 @@
           <th>Vencimiento</th>
           <th>Total</th>
           <th>Estado</th>
+          <th>Generada por</th>
           <th>Acciones</th>
         </tr>
       </thead>
@@ -44,6 +45,7 @@
             <td>{{ inv.due | dateFormat }}</td>
             <td class="num">{{ total(inv) | currencyFormat }}</td>
             <td><app-badge [status]="inv.status" /></td>
+            <td class="num">{{ inv.createdBy || '—' }}</td>
             <td>
               <div style="display:flex; gap: var(--space-2); align-items:center; flex-wrap: wrap;">
                 <button class="btn btn-sm btn-secondary" (click)="openInvoice(inv)">Editar</button>
@@ -62,7 +64,7 @@
             </td>
           </tr>
           <tr *ngIf="expandedInvoice() === inv.id" class="detail-row">
-            <td colspan="7" style="padding: 0;">
+            <td colspan="8" style="padding: 0;">
               <div class="invoice-detail">
                 <div class="detail-header">Herramientas en esta factura</div>
                 <div class="detail-items">
@@ -87,12 +89,36 @@
                 <div *ngIf="inv.extraCharge" class="detail-notes" style="margin-top: var(--space-2);">
                   <strong>{{ inv.extraDescription || 'Valor adicional' }}:</strong> {{ inv.extraCharge | currencyFormat }}
                 </div>
+                <div class="detail-payments" style="margin-top: var(--space-3);">
+                  <div class="pay-summary">
+                    <span><strong>Total:</strong> {{ total(inv) | currencyFormat }}</span>
+                    <span style="color: var(--accent);"><strong>Abonado:</strong> {{ paid(inv) | currencyFormat }}</span>
+                    <span [style.color]="pending(inv) > 0 ? 'var(--danger)' : 'var(--success)'"><strong>Saldo:</strong> {{ pending(inv) | currencyFormat }}</span>
+                  </div>
+                  <div *ngIf="(inv.payments ?? []).length > 0" class="pay-list">
+                    <div class="pay-row" *ngFor="let p of inv.payments">
+                      <span>{{ p.date | dateFormat }}</span>
+                      <span>{{ p.amount | currencyFormat }}</span>
+                    </div>
+                  </div>
+                  <div class="pay-form" *ngIf="pending(inv) > 0">
+                    <input
+                      type="number"
+                      min="0"
+                      style="flex: 1;"
+                      [value]="paymentAmount()[inv.id ?? '']"
+                      placeholder="Monto del abono"
+                      (input)="onPaymentInput(inv, $event)"
+                    />
+                    <button class="btn btn-sm btn-primary" (click)="registerAbono(inv)">Registrar abono</button>
+                  </div>
+                </div>
               </div>
             </td>
           </tr>
         </ng-container>
         <tr *ngIf="filteredInvoices().length === 0">
-          <td colspan="7" style="text-align:center; color: var(--meta); padding: var(--space-8);">No se encontraron facturas</td>
+          <td colspan="8" style="text-align:center; color: var(--meta); padding: var(--space-8);">No se encontraron facturas</td>
         </tr>
       </tbody>
     </table>

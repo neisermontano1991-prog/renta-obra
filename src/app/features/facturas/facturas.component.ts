@@ -20,6 +20,7 @@ export class FacturasComponent {
   activeFilter = signal<'todas' | 'pagada' | 'pendiente' | 'vencida'>('todas');
   searchQuery = signal('');
   expandedInvoice = signal<string | null>(null);
+  paymentAmount = signal<Record<string, string>>({});
 
   private invoices = this.data.invoices$;
 
@@ -73,7 +74,38 @@ export class FacturasComponent {
   }
 
   total(inv: Invoice): number {
-    return inv.items.reduce((s, i) => s + i.priceDay * i.days * (i.quantity || 1), 0) + (inv.extraCharge ?? 0);
+    return this.data.getInvoiceTotal(inv);
+  }
+
+  paid(inv: Invoice): number {
+    return this.data.getInvoicePaid(inv);
+  }
+
+  pending(inv: Invoice): number {
+    return this.data.getInvoicePending(inv);
+  }
+
+  registerAbono(inv: Invoice): void {
+    const amount = Number(this.paymentAmount()[inv.id ?? ''] || 0);
+    if (amount <= 0) {
+      alert('Ingresa un monto válido');
+      return;
+    }
+    const restante = this.pending(inv);
+    const total = this.total(inv);
+    const aplicar = Math.min(amount, restante);
+    if (aplicar <= 0) return;
+    this.data.addPayment(inv.id!, aplicar);
+    const sobra = amount - aplicar;
+    if (sobra > 0) {
+      alert(`Se aplicaron ${aplicar.toLocaleString('es-CO')} al abono. El monto excede el saldo (${total.toLocaleString('es-CO')}).`);
+    }
+    this.paymentAmount.update(m => ({ ...m, [inv.id ?? '']: '' }));
+  }
+
+  onPaymentInput(inv: Invoice, event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.paymentAmount.update(m => ({ ...m, [inv.id ?? '']: value }));
   }
 
   clientName(clientId: string): string {

@@ -90,8 +90,16 @@
   <div class="side-user">
     <div class="avatar">{{ initials }}</div>
     <div>
-      <div style="font-weight: var(--fw-semibold); color: var(--fg);">{{ business().adminName || business().name }}</div>
-      <div style="font-size: var(--fs-xs);">Administrador</div>
+      <div style="font-weight: var(--fw-semibold); color: var(--fg);">{{ displayName }}</div>
+      <div style="font-size: var(--fs-xs);">{{ displaySub }}</div>
     </div>
+  </div>
+
+  <div class="side-user" style="border-top: 1px solid var(--border); padding-top: var(--space-3);">
+    @if (demoMode()) {
+      <button class="btn btn-sm btn-primary" style="width: 100%;" (click)="exitDemo()">Salir del modo demo</button>
+    } @else {
+      <button class="btn btn-sm btn-secondary" style="width: 100%;" (click)="logout()">Cerrar sesión</button>
+    }
   </div>
 </aside>
