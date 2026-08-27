@@ -75,6 +75,9 @@ CREATE TABLE IF NOT EXISTS counters (
 -- =============================================
 -- Row Level Security (RLS)
 -- =============================================
+-- IMPORTANTE: ejecuta también migrations/003-rls-auth-uid.sql
+-- (limpia las políticas USING(true) y crea las políticas por auth.uid()).
+
 -- Habilitar RLS en todas las tablas
 ALTER TABLE businesses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
@@ -83,77 +86,13 @@ ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE invoice_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE counters ENABLE ROW LEVEL SECURITY;
 
--- Policy: Los usuarios solo ven sus propios datos
--- (Esto es un ejemplo básico - ajusta según tu necesidad de auth)
-
-CREATE POLICY "Users can view own business" ON businesses
-  FOR SELECT USING (true);
-
-CREATE POLICY "Users can insert business" ON businesses
-  FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "Users can update own business" ON businesses
-  FOR UPDATE USING (true);
-
-CREATE POLICY "Users can delete own business" ON businesses
-  FOR DELETE USING (true);
-
-CREATE POLICY "Users can view own clients" ON clients
-  FOR SELECT USING (true);
-
-CREATE POLICY "Users can insert clients" ON clients
-  FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "Users can update own clients" ON clients
-  FOR UPDATE USING (true);
-
-CREATE POLICY "Users can delete own clients" ON clients
-  FOR DELETE USING (true);
-
-CREATE POLICY "Users can view own tools" ON tools
-  FOR SELECT USING (true);
-
-CREATE POLICY "Users can insert tools" ON tools
-  FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "Users can update own tools" ON tools
-  FOR UPDATE USING (true);
-
-CREATE POLICY "Users can delete own tools" ON tools
-  FOR DELETE USING (true);
-
-CREATE POLICY "Users can view own invoices" ON invoices
-  FOR SELECT USING (true);
-
-CREATE POLICY "Users can insert invoices" ON invoices
-  FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "Users can update own invoices" ON invoices
-  FOR UPDATE USING (true);
-
-CREATE POLICY "Users can delete own invoices" ON invoices
-  FOR DELETE USING (true);
-
-CREATE POLICY "Users can view own invoice_items" ON invoice_items
-  FOR SELECT USING (true);
-
-CREATE POLICY "Users can insert invoice_items" ON invoice_items
-  FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "Users can update own invoice_items" ON invoice_items
-  FOR UPDATE USING (true);
-
-CREATE POLICY "Users can delete own invoice_items" ON invoice_items
-  FOR DELETE USING (true);
-
-CREATE POLICY "Users can view counters" ON counters
-  FOR SELECT USING (true);
-
-CREATE POLICY "Users can insert counters" ON counters
-  FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "Users can update counters" ON counters
-  FOR UPDATE USING (true);
+-- Las políticas reales viven en migrations/003-rls-auth-uid.sql.
+-- Resumen de las políticas aplicadas por la migración 003:
+--   - businesses / clients / tools / counters / expenses (compartidas):
+--       todas las operaciones requieren estar autenticado (auth.uid() IS NOT NULL).
+--   - invoices / invoice_items (por usuario):
+--       SELECT: auth.uid() IS NOT NULL Y (created_by vacío O created_by = email del JWT)
+--       INSERT/UPDATE/DELETE: created_by = email del JWT.
 
 -- =============================================
 -- Seed Data (Datos iniciales)

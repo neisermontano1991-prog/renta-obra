@@ -95,7 +95,7 @@ export class DataService {
   }
 
   private async init(): Promise<void> {
-    this.restoreSession();
+    await this.restoreSession();
     try {
       await this.loadFromSupabase();
       this.connected.set(true);
@@ -106,7 +106,20 @@ export class DataService {
     }
   }
 
-  private restoreSession(): void {
+  private async restoreSession(): Promise<void> {
+    try {
+      const { data } = await this.supabase.auth.getSession();
+      if (data.session?.user) {
+        const u: SessionUser = {
+          id: data.session.user.id,
+          email: data.session.user.email || '',
+          name: (data.session.user.email || '').split('@')[0],
+        };
+        this.user.set(u);
+        localStorage.setItem(SESSION_KEY, JSON.stringify(u));
+        return;
+      }
+    } catch {}
     try {
       const raw = localStorage.getItem(SESSION_KEY);
       if (raw) {
